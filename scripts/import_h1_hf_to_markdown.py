@@ -317,6 +317,8 @@ def process_dataset(
         "duplicates_skipped": 0,
         "errors": 0,
         "error_details": [],
+        "non_empty_vuln": 0,
+        "empty_vuln": 0,
     }
 
     try:
@@ -368,6 +370,12 @@ def process_dataset(
                 if filepath.exists() and not overwrite:
                     stats["duplicates_skipped"] += 1
                     continue
+
+                # Track vulnerability text presence
+                if normalized.get("_vulnerability_text", "").strip():
+                    stats["non_empty_vuln"] += 1
+                else:
+                    stats["empty_vuln"] += 1
 
                 md_content = report_to_markdown(normalized)
                 filepath.write_text(md_content, encoding="utf-8")
@@ -468,6 +476,9 @@ def main():
     total_written = sum(s["rows_written"] for s in all_stats)
     total_dupes = sum(s["duplicates_skipped"] for s in all_stats)
     total_errors = sum(s["errors"] for s in all_stats)
+    total_non_empty = sum(s["non_empty_vuln"] for s in all_stats)
+    total_empty = sum(s["empty_vuln"] for s in all_stats)
+    pct_empty = (total_empty / max(total_written, 1)) * 100
     datasets_loaded = [s["dataset"] for s in all_stats if s["loaded"]]
     datasets_failed = [s["dataset"] for s in all_stats if not s["loaded"]]
 
@@ -480,6 +491,9 @@ def main():
         "total_unique_written": total_written,
         "duplicates_skipped": total_dupes,
         "total_errors": total_errors,
+        "reports_with_vuln_text": total_non_empty,
+        "reports_without_vuln_text": total_empty,
+        "pct_empty": round(pct_empty, 1),
         "output_directory": str(output_dir.resolve()),
         "timestamp": datetime.utcnow().isoformat(),
     }
@@ -499,6 +513,8 @@ def main():
     log.info(f"  Rows seen:           {total_seen}")
     log.info(f"  Unique reports:      {total_written}")
     log.info(f"  Duplicates skipped:  {total_dupes}")
+    log.info(f"  With vuln text:      {total_non_empty}")
+    log.info(f"  Without vuln text:   {total_empty} ({pct_empty:.1f}%)")
     log.info(f"  Errors:              {total_errors}")
     log.info(f"  Output:              {output_dir.resolve()}")
     log.info(f"  Summary:             {summary_path.resolve()}")

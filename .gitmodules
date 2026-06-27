@@ -1,0 +1,3 @@
+[submodule "knowledge-rag"]
+	path = knowledge-rag
+	url = https://github.com/lyonzin/knowledge-rag.git

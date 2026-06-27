@@ -2,41 +2,51 @@
 
 A local RAG knowledge base for LLM harnesses, built on `knowledge-rag`. Ingests HackerOne disclosed reports, security taxonomies, and curated vulnerability summaries — searchable via any MCP client (Claude Code, opencode, Cursor, etc.).
 
+`knowledge-rag` is included as a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules). Clone with `--recurse-submodules` or run `git submodule update --init` after cloning.
+
 ## One-Click Install
 
 ```bash
 # Claude Code
-bash <(curl -fsSL https://raw.githubusercontent.com/REPO_OWNER/security-brain/main/scripts/install.sh) claude
+bash <(curl -fsSL https://raw.githubusercontent.com/pranshxc/KB_BB/main/scripts/install.sh) claude
 
 # opencode
-bash <(curl -fsSL https://raw.githubusercontent.com/REPO_OWNER/security-brain/main/scripts/install.sh) opencode
+bash <(curl -fsSL https://raw.githubusercontent.com/pranshxc/KB_BB/main/scripts/install.sh) opencode
 ```
 
-Or if you've already cloned the repo:
+Or if already cloned:
 
 ```bash
-./scripts/install.sh          # auto-detect client
-./scripts/install.sh claude   # force Claude Code
-./scripts/install.sh opencode # force opencode
+git submodule update --init     # get knowledge-rag
+./scripts/install.sh             # auto-detect
+./scripts/install.sh claude      # force Claude Code
 ```
 
-**What it does**: clones the repo, sets up Python venv, installs deps, downloads 12,492 HackerOne reports, indexes them, and registers the MCP server with your client. Takes ~2 min for setup, then indexes in background.
+The install script: clones the repo, initializes the `knowledge-rag` submodule, sets up a Python venv, installs dependencies, generates taxonomies, downloads 12,492 HackerOne reports, starts background indexing, and registers the MCP server.
 
 ## Manual Setup
 
 ```bash
-git clone https://github.com/REPO_OWNER/security-brain.git
-cd security-brain/knowledge-rag
+git clone --recurse-submodules https://github.com/pranshxc/KB_BB.git
+cd KB_BB/knowledge-rag
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && pip install -e .
-cd .. && python scripts/generate_security_taxonomies.py
+pip install datasets pyyaml python-slugify tqdm rich
+cd ..
+
+# Generate taxonomies & import reports
+python scripts/generate_security_taxonomies.py
 python scripts/import_h1_hf_to_markdown.py
+
+# Generate local MCP config
+python scripts/generate_mcp_config.py
+
+# Or register directly:
+claude mcp add security-brain -s user -- \
+  "$PWD/knowledge-rag/.venv/bin/python" -m mcp_server.server
 
 # Start the MCP server
 cd knowledge-rag && .venv/bin/python -m mcp_server.server
-
-# In another terminal, register with client:
-claude mcp add security-brain -s user -- /path/to/knowledge-rag/.venv/bin/python -m mcp_server.server
 ```
 
 ## Structure
@@ -52,9 +62,9 @@ claude mcp add security-brain -s user -- /path/to/knowledge-rag/.venv/bin/python
 │   ├── internal/            # Internal security docs
 │   ├── prompts/             # Harness instructions
 │   └── evals/               # Sample evaluation queries
-├── knowledge-rag/           # MCP RAG engine (submodule-ready)
+├── knowledge-rag/           # MCP RAG engine (git submodule)
 ├── scripts/                 # Utility scripts
-├── configs/                 # MCP configuration examples
+├── configs/                 # MCP configuration templates
 └── docs/                    # Full documentation
 ```
 
@@ -62,16 +72,18 @@ claude mcp add security-brain -s user -- /path/to/knowledge-rag/.venv/bin/python
 
 | Script | Purpose |
 |--------|---------|
+| `scripts/install.sh` | One-click install (clone, setup, index, register) |
 | `scripts/import_h1_hf_to_markdown.py` | Import HackerOne reports from Hugging Face |
 | `scripts/generate_security_taxonomies.py` | Generate taxonomy/summary files |
+| `scripts/generate_mcp_config.py` | Write local MCP configs with absolute paths |
 | `scripts/validate_security_brain.py` | Validate entire setup (50 checks) |
 | `scripts/print_mcp_setup.py` | Print MCP setup instructions |
 
 ## Docs
 
-- [SECURITY_BRAIN_SETUP.md](docs/SECURITY_BRAIN_SETUP.md) — architecture, ingestion, indexing
-- [MCP_CLIENT_SETUP.md](docs/MCP_CLIENT_SETUP.md) — Claude Code, opencode, generic client setup
-- [OPERATIONS.md](docs/OPERATIONS.md) — updates, tuning, troubleshooting
+- [docs/SECURITY_BRAIN_SETUP.md](docs/SECURITY_BRAIN_SETUP.md) — architecture, ingestion, indexing
+- [docs/MCP_CLIENT_SETUP.md](docs/MCP_CLIENT_SETUP.md) — Claude Code, opencode, generic client setup
+- [docs/OPERATIONS.md](docs/OPERATIONS.md) — updates, tuning, troubleshooting
 
 ## Stats
 

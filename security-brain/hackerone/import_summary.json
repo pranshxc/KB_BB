@@ -17,6 +17,9 @@
   "total_unique_written": 12492,
   "duplicates_skipped": 12744,
   "total_errors": 0,
+  "reports_with_vuln_text": 9365,
+  "reports_without_vuln_text": 3127,
+  "pct_empty": 25.0,
   "output_directory": "/Users/pranshupathak/KB_BB/security-brain/hackerone/reports",
-  "timestamp": "2026-06-26T11:52:37.153455"
+  "timestamp": "2026-06-27T08:06:50.248266"
 }
