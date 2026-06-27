@@ -392,36 +392,62 @@ def _flatten_json(data, prefix="") -> str:
 # ── Archive extraction ──────────────────────────────────────────────
 def extract_archive(filepath: Path, temp_dir: Path) -> List[Path]:
     extracted: List[Path] = []
+    max_files = 500
+    max_total_bytes = 200 * 1024 * 1024  # 200MB total
+    total_bytes = 0
     try:
         import shutil
-        if filepath.suffix.lower() in (".zip",):
+        name_lower = filepath.name.lower()
+        if filepath.suffix.lower() == ".zip":
             import zipfile
             with zipfile.ZipFile(str(filepath), "r") as zf:
                 for name in zf.namelist():
-                    if name.startswith("/") or ".." in name:
+                    # Safety: skip symlinks, absolute paths, path traversal
+                    info = zf.getinfo(name)
+                    if info.is_symlink():
                         continue
-                    member = Path(name)
-                    dest = temp_dir / member.name
+                    if os.path.isabs(name) or ".." in Path(name).parts:
+                        log.warning(f"  Skipping unsafe path in archive: {name}")
+                        continue
+                    info_size = info.file_size
+                    if total_bytes + info_size > max_total_bytes:
+                        log.warning(f"  Archive extraction size limit reached ({max_total_bytes//1024//1024}MB)")
+                        break
+                    if len(extracted) >= max_files:
+                        log.warning(f"  Archive file count limit reached ({max_files})")
+                        break
+                    dest = temp_dir / Path(name).name
                     try:
                         zf.extract(name, temp_dir)
                         extracted.append(temp_dir / name)
-                    except Exception:
-                        log.warning(f"  Could not extract {name} from {filepath.name}")
-        elif filepath.suffix.lower() == ".tar" or ".tar." in filepath.suffix.lower():
+                        total_bytes += info_size
+                    except Exception as e:
+                        log.warning(f"  Could not extract {name}: {e}")
+        elif ".tar" in name_lower:
             import tarfile
             with tarfile.open(str(filepath), "r:*") as tf:
                 for member in tf.getmembers():
-                    if member.name.startswith("/") or ".." in member.name:
+                    if member.issym() or member.isdev():
                         continue
-                    dest = temp_dir / Path(member.name).name
+                    if os.path.isabs(member.name) or ".." in Path(member.name).parts:
+                        log.warning(f"  Skipping unsafe path: {member.name}")
+                        continue
+                    if total_bytes + (member.size if member.isfile() else 0) > max_total_bytes:
+                        log.warning(f"  Archive extraction size limit reached")
+                        break
+                    if len(extracted) >= max_files:
+                        log.warning(f"  Archive file count limit reached")
+                        break
                     try:
-                        tf.extract(member, temp_dir)
+                        tf.extract(member, temp_dir, filter="data")
                         extracted.append(temp_dir / member.name)
-                    except Exception:
-                        log.warning(f"  Could not extract {member.name} from {filepath.name}")
+                        total_bytes += member.size if member.isfile() else 0
+                    except Exception as e:
+                        log.warning(f"  Could not extract {member.name}: {e}")
     except ImportError:
         return []
-    except Exception:
+    except Exception as e:
+        log.warning(f"  Archive extraction error: {e}")
         return []
     return extracted
 
@@ -565,7 +591,27 @@ def safe_out_filename(title: str, raw_hash: str, suffix: str = ".md") -> str:
     return f"{slug}_{raw_hash[:8]}{suffix}"
 
 
-# ── Main processing ──────────────────────────────────────────────────
+# ── Sensitive file denylist ─────────────────────────────────────────
+SENSITIVE_PATTERNS = {
+    ".env", ".env.local", ".env.production", ".env.development",
+    ".npmrc", ".pypirc", "id_rsa", "id_ed25519", "id_ecdsa",
+    ".git-credentials", "credentials.json", "service-account.json",
+    "docker-compose.override.yml",
+}
+SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx", ".jks", ".keystore"}
+
+
+def is_sensitive(filepath: Path) -> bool:
+    name = filepath.name.lower()
+    if name in SENSITIVE_PATTERNS:
+        return True
+    if filepath.suffix.lower() in SENSITIVE_SUFFIXES:
+        return True
+    if ".kube" in filepath.parts and "config" in filepath.name:
+        return True
+    if filepath.name.startswith(".") and filepath.name not in (".gitkeep", ".gitignore"):
+        return True
+    return False
 def process_file(
     filepath: Path,
     output_dir: Path,
@@ -585,6 +631,11 @@ def process_file(
     if fsize == 0:
         return 0, 0, 0
 
+    # Skip sensitive files unless allowed
+    if not args.allow_sensitive and is_sensitive(filepath):
+        append_error(manifest_dir, str(filepath), "Sensitive file skipped (use --allow-sensitive to force)")
+        return 0, 0, 1
+
     # Read raw bytes for fingerprinting
     try:
         raw_bytes = filepath.read_bytes()
@@ -592,7 +643,9 @@ def process_file(
         append_error(manifest_dir, str(filepath), str(e))
         return 0, 0, 1
 
-    suffix = filepath.suffix.lower()
+    suffix = "".join(filepath.suffixes).lower() if filepath.suffixes else filepath.suffix.lower()
+    if suffix.endswith(".tar.gz"):
+        suffix = ".tar.gz"
     source_type = resolve_source_type(suffix)
     if source_type == "unknown":
         return 0, 0, 0
@@ -660,7 +713,7 @@ def process_file(
 
     # Deduplicate
     is_dupe, raw_hash, text_hash = is_duplicate(cleaned, raw_bytes, fingerprints)
-    if is_dupe and args.dedupe:
+    if is_dupe and args.dedupe and not args.force:
         return 0, 1, 0
 
     # Redact secrets
@@ -680,7 +733,7 @@ def process_file(
     out_fn = safe_out_filename(title, raw_hash)
     out_path = cat_dir / out_fn
 
-    if out_path.exists():
+    if out_path.exists() and not args.force:
         return 0, 1, 0
 
     source_url = ""
@@ -770,8 +823,17 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         if args.dry_run:
             suffix = filepath.suffix.lower()
             stype = resolve_source_type(suffix)
-            if stype != "unknown":
+            is_sens = is_sensitive(filepath) and not args.allow_sensitive
+            if is_sens:
+                log.info(f"  [DRY-RUN] Would SKIP (sensitive): {filepath.name}")
+                stats["would_skip_sensitive"] = stats.get("would_skip_sensitive", 0) + 1
+            elif stype != "unknown":
                 log.info(f"  [DRY-RUN] Would process: {filepath.name} ({stype})")
+                stats["would_ingest"] = stats.get("would_ingest", 0) + 1
+                stats["by_type_dry"] = stats.get("by_type_dry", {})
+                stats["by_type_dry"][stype] = stats["by_type_dry"].get(stype, 0) + 1
+            else:
+                stats["would_skip_unknown"] = stats.get("would_skip_unknown", 0) + 1
             continue
 
         ingested, skipped, errored = process_file(
@@ -812,6 +874,7 @@ def main():
     parser.add_argument("--index", action="store_true", help="Trigger knowledge-rag reindex after ingestion")
     parser.add_argument("--max-file-size-mb", type=int, default=50, help="Max file size in MB (default: 50)")
     parser.add_argument("--include-hidden", action="store_true", help="Include hidden files and directories")
+    parser.add_argument("--allow-sensitive", action="store_true", help="Allow ingestion of sensitive files (.env, .key, .pem, etc.)")
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
 
     args = parser.parse_args()
@@ -845,13 +908,20 @@ def main():
     print()
     print("-" * 40)
     print(f"  Files scanned:        {sc}")
-    print(f"  Files ingested:       {ig}")
-    print(f"  Duplicates skipped:   {du}")
-    print(f"  Errors:               {er}")
-    if stats.get("by_type"):
-        print(f"  By type:              {json.dumps(stats['by_type'])}")
-    if stats.get("by_category"):
-        print(f"  By category:          {json.dumps(stats['by_category'])}")
+    if args.dry_run:
+        print(f"  Would ingest:         {stats.get('would_ingest', 0)}")
+        print(f"  Would skip (sensitive): {stats.get('would_skip_sensitive', 0)}")
+        print(f"  Would skip (unknown):  {stats.get('would_skip_unknown', 0)}")
+        if stats.get("by_type_dry"):
+            print(f"  By type:              {json.dumps(stats['by_type_dry'])}")
+    else:
+        print(f"  Files ingested:       {ig}")
+        print(f"  Duplicates skipped:   {du}")
+        print(f"  Errors:               {er}")
+        if stats.get("by_type"):
+            print(f"  By type:              {json.dumps(stats['by_type'])}")
+        if stats.get("by_category"):
+            print(f"  By category:          {json.dumps(stats['by_category'])}")
     print("-" * 40)
 
     if not args.dry_run:

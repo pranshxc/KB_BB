@@ -2,7 +2,8 @@
 """URL ingestion for the Security Brain.
 
 Read URLs from a file, fetch each page, extract title and readable
-text, and convert to Markdown documents.
+text, and convert to Markdown documents. Uses the same deduplication,
+topic detection, and secret redaction as ingest_anything.py.
 
 Usage:
   python ingest_urls.py --input knowledge-inbox/urls.txt --output security-brain/imported/blogs
@@ -12,11 +13,13 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import re
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import yaml
@@ -43,13 +46,106 @@ DEFAULT_USER_AGENT = (
 DEFAULT_MANIFEST_DIR = "security-brain/manifests"
 
 
+# ── Copy topic detection from ingest_anything ───────────────────────
+def load_taxonomy() -> Dict[str, List[str]]:
+    p = Path("configs/content_taxonomy.yaml")
+    if not p.is_file():
+        p = Path(__file__).resolve().parent.parent / "configs/content_taxonomy.yaml"
+    if not p.is_file():
+        return {}
+    try:
+        data = yaml.safe_load(p.read_text()) or {}
+        raw = data.get("topics", {})
+        if not isinstance(raw, dict):
+            return {}
+        out: Dict[str, List[str]] = {}
+        for topic_name, topic_data in raw.items():
+            if isinstance(topic_data, dict) and "keywords" in topic_data:
+                out[topic_name] = [str(k).lower() for k in topic_data["keywords"]]
+        return out
+    except Exception:
+        return {}
+
+
+TOPICS_CACHE: Optional[Dict[str, List[str]]] = None
+
+
+def detect_topics(text: str) -> List[str]:
+    global TOPICS_CACHE
+    if TOPICS_CACHE is None:
+        TOPICS_CACHE = load_taxonomy()
+    if not text or len(text) < 20 or not TOPICS_CACHE:
+        return []
+    text_lower = text.lower()
+    matches = []
+    for topic, keywords in TOPICS_CACHE.items():
+        score = sum(1 for kw in keywords if kw in text_lower)
+        if score >= 1:
+            matches.append((topic, score))
+    matches.sort(key=lambda x: -x[1])
+    return [m[0] for m in matches[:6]]
+
+
+# ── Copy secret redaction from ingest_anything ──────────────────────
+SECRET_PATTERNS: List[Tuple[str, str]] = [
+    (r'(?i)(api[_-]?key|apikey|api[_-]?secret|secret[_-]?key)\s*[:=]\s*["\']?([^\s"\']{8,})["\']?', r'\1=***REDACTED***'),
+    (r'(?i)(password|passwd|pwd)\s*[:=]\s*["\']?([^\s"\']+)["\']?', r'\1=***REDACTED***'),
+    (r'(?i)(token|jwt|bearer)\s+["\']?([A-Za-z0-9\-_\.]{20,})["\']?', r'\1 ***REDACTED***'),
+    (r'(?i)(aws[_-]?(access[_-]?key|secret)|AKIA[A-Z0-9]{16})', '***REDACTED-AWS-KEY***'),
+    (r'(?i)(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}', '***REDACTED-GH-TOKEN***'),
+    (r'(?i)(-----BEGIN\s(?:RSA\s)?PRIVATE\sKEY-----.*?-----END\s(?:RSA\s)?PRIVATE\sKEY-----)', '***REDACTED-PRIVATE-KEY***', re.DOTALL),
+    (r'(?i)(sk-[A-Za-z0-9_/]{20,})', '***REDACTED-API-KEY***'),
+]
+
+
+def redact_secrets(text: str) -> Tuple[str, bool]:
+    changed = False
+    result = text
+    for item in SECRET_PATTERNS:
+        pattern = item[0]
+        replacement = item[1]
+        flags = item[2] if len(item) > 2 else re.MULTILINE
+        new_result, count = re.subn(pattern, replacement, result, flags=flags)
+        if count > 0:
+            changed = True
+            result = new_result
+    return result, changed
+
+
+# ── Deduplication helpers ───────────────────────────────────────────
+def load_fingerprints() -> Dict[str, str]:
+    fp_file = Path(DEFAULT_MANIFEST_DIR) / "content_fingerprints.json"
+    if fp_file.is_file():
+        try:
+            return json.loads(fp_file.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+    return {}
+
+
+def append_manifest(entry: dict) -> None:
+    man_dir = Path(DEFAULT_MANIFEST_DIR)
+    man_dir.mkdir(parents=True, exist_ok=True)
+    with open(man_dir / "ingest_manifest.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, default=str) + "\n")
+
+
+def append_error(source: str, error: str, stage: str = "fetch") -> None:
+    man_dir = Path(DEFAULT_MANIFEST_DIR)
+    man_dir.mkdir(parents=True, exist_ok=True)
+    with open(man_dir / "ingest_errors.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps({
+            "source": source, "error": str(error), "stage": stage,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }) + "\n")
+
+
 def fetch_page(url: str, timeout: int = DEFAULT_TIMEOUT) -> tuple:
     if not HAS_REQUESTS:
         return None, "requests library not installed. Run: pip install requests"
     try:
         resp = requests.get(
-            url,
-            timeout=timeout,
+            url, timeout=timeout,
             headers={"User-Agent": DEFAULT_USER_AGENT},
             allow_redirects=True,
         )
@@ -89,7 +185,7 @@ def safe_filename(title: str) -> str:
     return slug or "page"
 
 
-def ingest_urls(input_path: str, output_dir: str, manifest_dir: str) -> dict:
+def ingest_urls(input_path: str, output_dir: str, manifest_dir: str = DEFAULT_MANIFEST_DIR) -> dict:
     in_file = Path(input_path)
     out_dir = Path(output_dir)
     man_dir = Path(manifest_dir)
@@ -107,27 +203,52 @@ def ingest_urls(input_path: str, output_dir: str, manifest_dir: str) -> dict:
     ]
     log.info(f"Found {len(urls)} URLs to process")
 
+    # Load dedupe fingerprints
+    fingerprints = load_fingerprints()
+    fp_file = man_dir / "content_fingerprints.json"
+
     stats = {"total": len(urls), "ingested": 0, "errors": 0, "skipped": 0}
 
     for i, url in enumerate(urls, 1):
         log.info(f"[{i}/{len(urls)}] {url[:80]}...")
+
+        # Check URL already ingested (fingerprint by URL)
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        if url_hash in fingerprints:
+            log.info("  Skipped (duplicate URL)")
+            stats["skipped"] += 1
+            continue
+
         resp, err = fetch_page(url)
         if err:
             log.warning(f"  Error: {err}")
             stats["errors"] += 1
-            _append_error(man_dir, url, err)
+            append_error(url, err, "fetch")
             continue
 
         title, text = extract_content(resp.text)
         if not text or len(text) < 50:
             log.warning("  Not enough content extracted")
             stats["skipped"] += 1
-            _append_error(man_dir, url, "Insufficient content")
+            append_error(url, "Insufficient content")
             continue
 
+        # Redact secrets
+        text, redacted = redact_secrets(text)
+
+        # Hash content for dedupe
         raw_hash = hashlib.sha256(resp.content).hexdigest()
         text_hash = hashlib.sha256(text.encode("utf-8", errors="replace") or b"").hexdigest()
 
+        if raw_hash in fingerprints or text_hash in fingerprints:
+            log.info("  Skipped (duplicate content)")
+            stats["skipped"] += 1
+            continue
+
+        # Detect topics
+        topics = detect_topics(text)
+
+        # Build frontmatter
         parsed = urlparse(url)
         domain = parsed.netloc.replace(".", "_")
 
@@ -138,12 +259,13 @@ def ingest_urls(input_path: str, output_dir: str, manifest_dir: str) -> dict:
             "domain": parsed.netloc,
             "title": title,
             "category": "blogs",
-            "tags": ["imported", "url", "blogs"],
+            "detected_topics": topics,
+            "tags": ["imported", "url", "blogs"] + topics[:4],
             "raw_sha256": raw_hash,
             "text_sha256": text_hash,
             "ingested_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "sensitivity": "public",
-            "redactions_applied": False,
+            "redactions_applied": redacted,
         }
         fm_yaml = yaml.dump(fm, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
@@ -157,6 +279,7 @@ def ingest_urls(input_path: str, output_dir: str, manifest_dir: str) -> dict:
 - URL: {url}
 - Domain: {parsed.netloc}
 - Ingested At: {fm["ingested_at"]}
+- Redacted: {redacted}
 
 ## Content
 
@@ -168,14 +291,30 @@ def ingest_urls(input_path: str, output_dir: str, manifest_dir: str) -> dict:
         log.info(f"  -> {filepath.name}")
         stats["ingested"] += 1
 
+        # Update fingerprints
+        fingerprints[url_hash] = url
+        fingerprints[raw_hash] = url
+        fingerprints[text_hash] = url
+        fp_file.write_text(json.dumps(fingerprints, indent=2, sort_keys=True), encoding="utf-8")
+
+        # Append manifest
+        append_manifest({
+            "source": url,
+            "output": str(filepath),
+            "source_type": "url",
+            "category": "blogs",
+            "title": title,
+            "topics": topics,
+            "redacted": redacted,
+            "raw_size": len(resp.content),
+            "raw_sha256": raw_hash,
+            "text_sha256": text_hash,
+            "ingested_at": datetime.now(timezone.utc).isoformat(),
+        })
+
         time.sleep(0.5)
 
     return stats
-
-
-def _append_error(man_dir: Path, url: str, error: str) -> None:
-    with open(man_dir / "ingest_errors.jsonl", "a", encoding="utf-8") as f:
-        f.write(json.dumps({"source": url, "error": str(error), "timestamp": datetime.now(timezone.utc).isoformat()}) + "\n")
 
 
 def main():
