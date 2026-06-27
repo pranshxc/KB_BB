@@ -78,6 +78,28 @@ cd knowledge-rag && .venv/bin/python -m mcp_server.server
 | `scripts/generate_mcp_config.py` | Write local MCP configs with absolute paths |
 | `scripts/validate_security_brain.py` | Validate entire setup (50 checks) |
 | `scripts/print_mcp_setup.py` | Print MCP setup instructions |
+| `scripts/ingest_anything.py` | Universal ingestion: drop any file into `knowledge-inbox/` |
+| `scripts/ingest_urls.py` | Fetch and ingest URLs into the knowledge base |
+| `scripts/reindex_knowledge.py` | Trigger knowledge-rag reindex |
+| `scripts/validate_ingestion.py` | Validate ingestion output |
+| `scripts/generate_ingestion_report.py` | Generate ingestion summary report |
+
+## Universal Knowledge Ingestion
+
+Drop any supported file into `knowledge-inbox/` and run:
+
+```bash
+# Preview
+python scripts/ingest_anything.py --dry-run
+
+# Ingest everything
+python scripts/ingest_anything.py --dedupe --redact-secrets
+
+# With reindex
+python scripts/ingest_anything.py --index
+```
+
+Supports: Markdown, Text, HTML, PDF, DOCX, PPTX, XLSX, CSV, JSON, JSONL, code files, ZIP/TAR archives. Gracefully falls back if parser dependencies are missing. See [`docs/UNIVERSAL_INGESTION.md`](docs/UNIVERSAL_INGESTION.md) for full docs.
 
 ## Docs
 
