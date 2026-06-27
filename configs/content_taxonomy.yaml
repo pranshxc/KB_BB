@@ -1,0 +1,237 @@
+topics:
+  oauth:
+    keywords:
+      - oauth
+      - oauth2
+      - oidc
+      - openid connect
+      - authorization code
+      - redirect_uri
+      - pkce
+      - implicit grant
+      - authorization grant
+  sso:
+    keywords:
+      - single sign-on
+      - sso
+      - federated identity
+      - identity provider
+      - idp
+      - service provider
+  saml:
+    keywords:
+      - saml
+      - saml assertion
+      - saml response
+      - xml signature
+      - signature wrapping
+      - saml2
+  jwt:
+    keywords:
+      - jwt
+      - json web token
+      - algorithm confusion
+      - none algorithm
+      - hs256
+      - rs256
+      - jwe
+      - jws
+      - jwk
+  idor:
+    keywords:
+      - idor
+      - insecure direct object reference
+      - object id
+      - enumeration
+      - bola
+      - broken object level authorization
+  access-control:
+    keywords:
+      - access control
+      - authorization
+      - privilege escalation
+      - role-based
+      - rbac
+      - abac
+      - broken access control
+      - vertical escalation
+      - horizontal escalation
+  ssrf:
+    keywords:
+      - ssrf
+      - server-side request forgery
+      - cloud metadata
+      - 169.254.169.254
+      - internal network
+      - url injection
+  xss:
+    keywords:
+      - xss
+      - cross-site scripting
+      - reflected xss
+      - stored xss
+      - dom xss
+      - content security policy
+      - csp
+      - html injection
+  sqli:
+    keywords:
+      - sqli
+      - sql injection
+      - blind sqli
+      - prepared statement
+      - parameterized query
+      - second-order injection
+  command-injection:
+    keywords:
+      - command injection
+      - rce
+      - remote code execution
+      - os command
+      - shell injection
+      - argument injection
+  file-upload:
+    keywords:
+      - file upload
+      - content-type bypass
+      - unrestricted upload
+      - zip slip
+      - image upload
+  path-traversal:
+    keywords:
+      - path traversal
+      - directory traversal
+      - lfi
+      - local file inclusion
+      - ../ attack
+  password-reset:
+    keywords:
+      - password reset
+      - forgot password
+      - reset token
+      - account recovery
+      - email verification
+      - token expiration
+  mfa:
+    keywords:
+      - mfa
+      - multi-factor authentication
+      - 2fa
+      - two-factor authentication
+      - mfa bypass
+      - totp
+  otp:
+    keywords:
+      - otp
+      - one-time password
+      - sms verification
+      - token
+      - verification code
+  rate-limit:
+    keywords:
+      - rate limit
+      - rate limiting
+      - throttling
+      - brute force
+      - brute-force
+      - enumeration
+  automation-abuse:
+    keywords:
+      - automation
+      - automated attack
+      - scraping
+      - bot
+      - account creation
+  race-condition:
+    keywords:
+      - race condition
+      - toctou
+      - concurrent
+      - parallelism
+      - coupon abuse
+  graphql:
+    keywords:
+      - graphql
+      - introspection
+      - query depth
+      - batching attack
+      - resolver
+      - field-level authorization
+  cors:
+    keywords:
+      - cors
+      - cross-origin resource sharing
+      - origin reflection
+      - access-control-allow-origin
+      - wildcard origin
+  csrf:
+    keywords:
+      - csrf
+      - cross-site request forgery
+      - anti-csrf token
+      - xsrf
+      - same-site
+  clickjacking:
+    keywords:
+      - clickjacking
+      - x-frame-options
+      - frame busting
+      - ui redressing
+  information-disclosure:
+    keywords:
+      - information disclosure
+      - debug endpoint
+      - stack trace
+      - verbose error
+      - directory listing
+      - source code disclosure
+      - git exposure
+  business-logic:
+    keywords:
+      - business logic
+      - logic flaw
+      - parameter tampering
+      - workflow bypass
+      - state machine
+  webhooks:
+    keywords:
+      - webhook
+      - webhook signature
+      - webhook replay
+      - webhook forgery
+      - signed payload
+  api-security:
+    keywords:
+      - api security
+      - api key
+      - api endpoint
+      - rest api
+      - rest
+      - mass assignment
+      - endpoint security
+  cloud-security:
+    keywords:
+      - cloud security
+      - aws
+      - gcp
+      - azure
+      - s3 bucket
+      - object storage
+      - iam
+  mobile-security:
+    keywords:
+      - mobile security
+      - android
+      - ios
+      - app security
+      - certificate pinning
+      - mobile app
+  supply-chain:
+    keywords:
+      - supply chain
+      - dependency
+      - third-party
+      - package
+      - library
+      - npm
+      - pip

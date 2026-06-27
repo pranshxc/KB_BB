@@ -1,0 +1,9 @@
+{
+  "vulnerability": "SQL Injection in search endpoint",
+  "endpoint": "GET /api/products/search",
+  "parameter": "q",
+  "impact": "Full database access via UNION injection",
+  "severity": "critical",
+  "cvss": 9.8,
+  "remediation": "Use parameterized queries"
+}

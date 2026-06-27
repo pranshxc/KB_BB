@@ -1,0 +1,16 @@
+Security Architecture Review Notes
+==================================
+
+JWT Implementation Concerns:
+- The refresh token has no rotation mechanism
+- Token expiration set to 7 days (too long)
+- No audience (aud) claim validation
+- Algorithm not pinned — should reject "none"
+
+IDOR Risk Areas:
+- GET /api/users/:id/invoices — no ownership check
+- POST /api/orgs/:orgId/members/:userId — user can escalate own role
+
+SSRF Vector:
+- Webhook endpoint accepts arbitrary URLs
+- Image proxy at /img/proxy?url= does not validate destination IP

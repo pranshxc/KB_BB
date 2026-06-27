@@ -1,0 +1,37 @@
+input_dir: knowledge-inbox
+output_dir: security-brain/imported
+manifest_dir: security-brain/manifests
+default_profile: security
+dedupe: true
+redact_secrets: true
+extract_archives: false
+max_file_size_mb: 50
+
+supported_extensions:
+  markdown: [".md", ".markdown"]
+  text: [".txt", ".log"]
+  html: [".html", ".htm"]
+  pdf: [".pdf"]
+  docx: [".docx"]
+  pptx: [".pptx"]
+  spreadsheet: [".csv", ".tsv", ".xlsx"]
+  json: [".json", ".jsonl"]
+  code:
+    - ".py"
+    - ".js"
+    - ".ts"
+    - ".go"
+    - ".rs"
+    - ".java"
+    - ".rb"
+    - ".php"
+    - ".c"
+    - ".cpp"
+    - ".h"
+    - ".cs"
+    - ".sh"
+    - ".yaml"
+    - ".yml"
+    - ".toml"
+    - ".ini"
+  archive: [".zip", ".tar", ".tar.gz", ".tgz"]
