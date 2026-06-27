@@ -1,0 +1,102 @@
+{
+  "topic": "Automation-related security bugs in HackerOne reports",
+  "topic_id": "automation-abuse",
+  "generated_at": "2025-01-27",
+  "total_queries_run": 16,
+  "query_groups": [
+    "automation automated script bot",
+    "rate limit bypass brute force authentication",
+    "captcha bypass registration automated mass",
+    "OTP verification code MFA brute force",
+    "SMS invite email notification spam mass mailing",
+    "API abuse enumeration bulk repeated",
+    "GraphQL batching cost limit negative rate",
+    "race condition parallel concurrent double submit",
+    "replay signature reuse idempotency payment token",
+    "webhook SSRF DoS notification spam automation",
+    "XMLRPC multicall brute force DoS bulk wordpress",
+    "business logic abuse coupon credit reward vote follow bulk",
+    "2FA bypass brute force verification code Slack",
+    "invite code brute force Uber promo code enumeration",
+    "email flooding password reset mass email no rate limit",
+    "hackbot redacted data brute force duplication"
+  ],
+  "total_candidate_reports": 85,
+  "verified_reports_count": 54,
+  "high_confidence_count": 47,
+  "medium_confidence_count": 2,
+  "low_confidence_count": 0,
+  "excluded_count": 5,
+  "categories": {
+    "A_user_driven_automation_abuse": 19,
+    "B_missing_anti_automation_control": 19,
+    "C_automation_system_exposure": 7,
+    "D_automation_assisted_exploitation": 7,
+    "E_tangential_excluded": 5
+  },
+  "pattern_families": {
+    "rate_limit_bypass": {"count": 5, "top_ids": ["170310", "1067533", "269318", "1040471", "1578121"]},
+    "otp_mfa_brute_force": {"count": 6, "top_ids": ["1060541", "1075827", "64666", "903363", "165727", "121696"]},
+    "captcha_bypass": {"count": 7, "top_ids": ["223324", "224342", "229584", "2213366", "124173", "246801", "3441"]},
+    "sms_email_spam": {"count": 8, "top_ids": ["94642", "16935", "209368", "329429", "794395", "963368", "1340650", "774050"]},
+    "api_abuse_enumeration": {"count": 6, "top_ids": ["223542", "223557", "5200", "293359", "125505", "145150"]},
+    "graphql_batching_abuse": {"count": 2, "top_ids": ["481518", "1559262"]},
+    "race_condition": {"count": 4, "top_ids": ["429026", "454949", "1132171", "1566017"]},
+    "replay_signature_reuse": {"count": 2, "top_ids": ["425314", "996540"]},
+    "webhook_automation_exposure": {"count": 6, "top_ids": ["243277", "2301565", "301924", "134292", "431633", "1096907"]},
+    "bot_information_leakage": {"count": 3, "top_ids": ["222870", "1305432", "247628"]},
+    "automation_assisted_exploitation": {"count": 1, "top_ids": ["1043480"]},
+    "resource_consumption_dos": {"count": 2, "top_ids": ["418151", "406614"]},
+    "business_logic_automation": {"count": 1, "top_ids": ["330105"]},
+    "xmlrpc_bulk_abuse": {"count": 4, "top_ids": ["325040", "448524", "752073", "884756"]}
+  },
+  "top_report_ids": [
+    "170310", "481518", "243277", "134292", "1060541",
+    "223324", "94642", "293359", "429026", "425314",
+    "330105", "247628", "1043480", "165727", "996540"
+  ],
+  "score_breakdown": {
+    "retrieval_precision": {"score": 8, "justification": "Most retrieved results were directly relevant to automation abuse; some noise from generic SSRF/rate-limit reports that are not automation-specific."},
+    "retrieval_recall": {"score": 7, "justification": "Coverage is strong for rate-limit, captcha, webhook, and brute-force families. Weaker for race conditions, replay, and business-logic automation which required more targeted queries."},
+    "source_grounding": {"score": 9, "justification": "Every cited report was verified from KB documents with matching filenames, titles, programs, and evidence excerpts. No unverified claims."},
+    "classification_quality": {"score": 8, "justification": "Clear 5-category taxonomy (A-E) applied consistently. Some borderline cases between B (missing control) and A (user abuse) required judgment calls."},
+    "deduplication_quality": {"score": 7, "justification": "XMLRPC cluster (325040, 448524, 752073, 884756) properly grouped as near-duplicates. Some remaining duplication in email-flooding and captcha-bypass families could be tighter."},
+    "safety": {"score": 10, "justification": "All guidance is defensive and authorized. No live exploit instructions against third-party systems. Testing methodology focuses on controlled verification."},
+    "artifact_usefulness": {"score": 9, "justification": "Four well-structured artifacts covering patterns, eval queries, verified reports, and summary. JSONL dataset enables automated retrieval testing. Pattern taxonomy is actionable for engineering teams."},
+    "overall_score": {"score": 8, "justification": "Strong coverage of automation-related security bugs with verified source grounding. Main gap is in race-condition and replay families which are less represented in the KB. Deduplication could be improved for repetitive report clusters."}
+  },
+  "strongest_retrieved_families": [
+    "rate_limit_bypass",
+    "captcha_bypass",
+    "otp_mfa_brute_force",
+    "webhook_automation_exposure",
+    "sms_email_spam",
+    "api_abuse_enumeration"
+  ],
+  "weakest_or_noisy_areas": [
+    "Race condition reports are present but few are automation-specific",
+    "Replay/signature reuse has only 2 strong reports",
+    "GraphQL batching abuse has only 2 reports (481518 is excellent but isolated)",
+    "XMLRPC cluster is repetitive - 4 near-identical reports",
+    "Business logic automation (SDEX) is strong but isolated",
+    "Some SSRF webhook results were not automation-specific (just standard SSRF)"
+  ],
+  "recommended_kb_improvements": [
+    "Add a summary doc for race-condition patterns in HackerOne reports",
+    "Add a summary doc for replay/idempotency failures",
+    "Create a deduplication index for XMLRPC and captcha-bypass report clusters",
+    "Index more GraphQL batching and cost-limit bypass reports",
+    "Add automation-specific tags or metadata to report files for filtering"
+  ],
+  "recommended_new_summary_docs": [
+    "automation-abuse-patterns.md (created in this evaluation)",
+    "race-condition-patterns.md",
+    "replay-and-idempotency-failures.md",
+    "api-rate-limiting-patterns.md"
+  ],
+  "recommended_eval_files": [
+    "automation_queries.jsonl (created in this evaluation)",
+    "automation_verified_reports.json (created in this evaluation)",
+    "automation_evaluation_summary.json (created in this evaluation)"
+  ]
+}
