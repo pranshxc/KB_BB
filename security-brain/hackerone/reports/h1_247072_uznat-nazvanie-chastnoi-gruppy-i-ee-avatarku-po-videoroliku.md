@@ -1,0 +1,54 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '247072'
+original_report_id: '247072'
+title: Узнать название частной группы и ее аватарку по видеоролику.
+team_handle: vkcom
+created_at: '2017-07-07T22:33:23.557Z'
+disclosed_at: '2017-07-25T17:27:42.844Z'
+has_bounty: true
+visibility: no-content
+substate: resolved
+vote_count: 10
+tags:
+- hackerone
+---
+
+# Узнать название частной группы и ее аватарку по видеоролику.
+
+## Metadata
+
+- HackerOne Report ID: 247072
+- Weakness: 
+- Program: vkcom
+- Disclosed At: 2017-07-25T17:27:42.844Z
+- Has Bounty: Yes
+- Visibility: no-content
+- Substate: resolved
+
+## Original Report
+
+
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

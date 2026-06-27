@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "security-brain": {
+      "type": "local",
+      "command": ["/ABSOLUTE/PATH/TO/KB_BB/knowledge-rag/.venv/bin/python", "-m", "mcp_server.server"],
+      "enabled": true,
+      "environment": {
+        "DYLD_LIBRARY_PATH": "/opt/homebrew/opt/expat/lib"
+      }
+    }
+  }
+}

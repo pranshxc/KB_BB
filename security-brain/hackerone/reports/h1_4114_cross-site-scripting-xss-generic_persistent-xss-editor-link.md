@@ -1,0 +1,81 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '4114'
+original_report_id: '4114'
+title: 'Persistent XSS: Editor link'
+weakness: Cross-site Scripting (XSS) - Generic
+team_handle: phabricator
+created_at: '2014-03-16T11:30:47.494Z'
+disclosed_at: '2014-04-16T20:02:21.407Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 6
+tags:
+- hackerone
+- cross-site-scripting-xss-generic
+---
+
+# Persistent XSS: Editor link
+
+## Metadata
+
+- HackerOne Report ID: 4114
+- Weakness: Cross-site Scripting (XSS) - Generic
+- Program: phabricator
+- Disclosed At: 2014-04-16T20:02:21.407Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+The editor link used for external applications allows scheme other than `http:` or `https:`.  Although the `phutil_tag` function checks whether the scheme is `javascript:` to prevent XSS attacks ([see GitHub](https://github.com/facebook/libphutil/blob/6b1066f7c0b34f5a485ad5d8af57792b3acae4d9/src/markup/render.php#L19)), it is straightforward to bypass this check by adding a whitespace character in between `javascript` and `:`.  For instance, clicking a link with the following value for the `href` attribute will execute arbitary JavaScript code: 
+
+```
+javascript
+:alert('xss')
+``` 
+(note the newline character between `javascript` and `:`).
+
+# Replication steps:
+
+* Go to `settings/panel/display/`
+* Press "Save" with network panel of console active
+* Copy the POST request as cURL
+* Use `curl` to set the `editor` parameter to `javascript%0A%3Aalert%281%29` (this is not possible to do in the browser as it strips these characters from input fields)
+* Go to a repository, and click "Edit", you should now see an alert box pop up
+
+# Attack scenarios
+
+Although the JavaScript code will only be executed on the user's own account, several attack scenarios are possible:
+
+1. A temporary account take-over would allow the attacker to set the editor link to include JavaScript code. Even when the victim manages to recover his account, clicking on the "Edit" link will  give the attacker again control over the account.
+2. Several login-csrf were found in Phabricator, so an attacker could have abused this (or abuse it if a similar issue arises) to login the victim into his account. The attacker could use the XSS to trick the victim into entering his own credentials
+
+# Proposed fix
+
+In the `phutil_tag` function, first filter all non-alphanumerical characters of `$href` and then check whether it starts with `javascript:`.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

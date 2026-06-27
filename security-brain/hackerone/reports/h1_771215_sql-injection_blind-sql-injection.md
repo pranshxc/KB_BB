@@ -1,0 +1,83 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '771215'
+original_report_id: '771215'
+title: Blind SQL Injection
+weakness: SQL Injection
+team_handle: deptofdefense
+created_at: '2020-01-09T18:55:08.616Z'
+disclosed_at: '2022-04-29T13:57:24.014Z'
+has_bounty: false
+visibility: full
+substate: resolved
+vote_count: 8
+tags:
+- hackerone
+- sql-injection
+---
+
+# Blind SQL Injection
+
+## Metadata
+
+- HackerOne Report ID: 771215
+- Weakness: SQL Injection
+- Program: deptofdefense
+- Disclosed At: 2022-04-29T13:57:24.014Z
+- Has Bounty: No
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+###Bug is : Blind Sql injection 
+
+SQL injection is a vulnerability that allows an attacker to alter back-end SQL statements by manipulating the user input. An SQL injection occurs when web applications accept user input that is directly placed into a SQL statement and doesn't properly filter out dangerous characters. 
+
+-----------------------------------------------
+
+###Vulnerability in :
+ https://███/ via ``` User-Agent: ```
+I've confirmed the vulnerability using sleep SQL queries with various arithmetic operations. The sleep command combined with the arithmetic operations will cause the server to sleep for various amounts of time depending on the result of the arithmetic operation.
+
+--------------------------
+
+###Proof of concept : 
+1- open https://███/  and intercept data 
+2- put this payload in user agent parameter ``` if(now()=sysdate(),sleep(10),0)/*'XOR(if(now()=sysdate(),sleep(10),0))OR'"XOR(if(now()=sysdate(),sleep(10),0))OR"*/  ```  like poc 1
+and as you see in poc 1 make sleep order for 10 sec 
+3- and if we change order to make sleep for 5 sec  ``` if(now()=sysdate(),sleep(5),0)/*'XOR(if(now()=sysdate(),sleep(5),0))OR'"XOR(if(now()=sysdate(),sleep(5),0))OR"*/ ``` like poc 2
+
+
+-----------------------------
+
+###Fix :
+Your script should filter metacharacters from user input. 
+Check detailed information for more information about fixing this vulnerability
+
+## Impact
+
+An attacker can manipulate the SQL statements that are sent to the MySQL database and inject malicious SQL statements. The attacker is able to change the logic of SQL statements executed against the database.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

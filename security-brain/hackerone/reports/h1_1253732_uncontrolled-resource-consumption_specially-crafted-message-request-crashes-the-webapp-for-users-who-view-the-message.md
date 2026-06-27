@@ -1,0 +1,76 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '1253732'
+original_report_id: '1253732'
+title: Specially crafted message request crashes the webapp for users who view the
+  message
+weakness: Uncontrolled Resource Consumption
+team_handle: mattermost
+created_at: '2021-07-07T16:59:31.385Z'
+disclosed_at: '2022-03-14T05:05:54.711Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 16
+asset_identifier: mattermost/mattermost-webapp
+asset_type: SOURCE_CODE
+max_severity: critical
+tags:
+- hackerone
+- uncontrolled-resource-consumption
+---
+
+# Specially crafted message request crashes the webapp for users who view the message
+
+## Metadata
+
+- HackerOne Report ID: 1253732
+- Weakness: Uncontrolled Resource Consumption
+- Program: mattermost
+- Disclosed At: 2022-03-14T05:05:54.711Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+## Summary:
+If you post a message with a modified `deleted_at` JSON parameter, the webapp will crash for anyone currently viewing the channel, or for anyone viewing a different channel if they switch to that channel afterward.
+
+## Steps To Reproduce:
+
+1. Go to a team channel, with Burp Suite ready.
+2. Send a message, intercepting the request with Burp. The JSON request contains keys like `message`, `channel_id`, and `pending_post_id`.
+3. Add the following key to the JSON request: `deleted_at`, with a value that's greater than 0. For example: `"deleted_at": 10`.
+4. Now if you send the request, the webapp will crash with a blank screen and you will have to refresh the page. _Note: If you want to send the request again, you may have to update the `pending_post_id` to some other unique value._
+
+It affects all users viewing the channel, not just the sender. Also, you don't even have to be in the channel when the message is sent. If you are already on a different channel, and you switch to the affected channel after the message is sent, it still has the same effect.
+
+## Impact
+
+A user could prevent others from accessing a channel by continually making this request so that it's impossible to load the webapp, because a new message would come and crash it even after refreshing the page. And since after refreshing you will still be on the channel, it could prevent the users from having access to the entire webapp, as they may not be able to exit the channel quick enough to prevent the crash.
+
+You could also send a DM to someone and when they click to view the message the webapp will crash.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

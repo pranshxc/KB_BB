@@ -1,0 +1,61 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '115284'
+original_report_id: '115284'
+title: prevent content spoofing on /search
+weakness: Violation of Secure Design Principles
+team_handle: gratipay
+created_at: '2016-02-07T23:00:13.429Z'
+disclosed_at: '2016-04-06T15:14:49.722Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 1
+tags:
+- hackerone
+- violation-of-secure-design-principles
+---
+
+# prevent content spoofing on /search
+
+## Metadata
+
+- HackerOne Report ID: 115284
+- Weakness: Violation of Secure Design Principles
+- Program: gratipay
+- Disclosed At: 2016-04-06T15:14:49.722Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+i have found content spoofing go to this URL 
+https://gratipay.com/search?q=Hi.%20We%20Need%20you%20and%20the%20founder%20of%20gratipay%20but%20make%20sure%20that%20before%20logging%20in%20you%20go%20to%20Http://Evilsite.com%20and%20when%20you%20go%20to%20the%20mentioned%20link%20you%20will%20see%20two%20fields%20of%20Login%20email%20and%20login%20password%20use%20your%20Eshare%20account%E2%80%99s%20login%20credentials%20to%20login%20there.%20The%20site%20Evilsite.com%20is%20trusted%20by%20us.%20After%20logging%20in%20you%20will%20see%20a%20credit%20card%20panel%20where%20you%20need%20to%20put%20your%20credit%20card%20details%20(%20which%20you%20used%20for%20Eshare%20account%20)%20so%20we%20could%20verify%20your%20identity%20on%20the%20other%20domain%20also.%20We%20are%20really%20Glad%20to%20have%20you%20here%20please%20do%20not%20hesitate%20to%20contact%20us%20any%20time%20at%20admin@evildomain.com%20we%20love%20to%20see%20you%20speak%20hello.%20Now%20close%20this%20window%20and%20follow%20the%20instructions%20above.%20Thank%20you%20for%20your%20patience%20and%20understanding.%20We%20Really%20appreciate%20it.
+
+
+Thanks
+shahzaib
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

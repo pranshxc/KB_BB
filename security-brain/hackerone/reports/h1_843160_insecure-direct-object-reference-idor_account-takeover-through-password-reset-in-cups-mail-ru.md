@@ -1,0 +1,59 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '843160'
+original_report_id: '843160'
+title: Account takeover through password reset in cups.mail.ru
+weakness: Insecure Direct Object Reference (IDOR)
+team_handle: mailru
+created_at: '2020-04-08T11:24:08.215Z'
+disclosed_at: '2020-08-03T09:53:57.506Z'
+has_bounty: true
+visibility: no-content
+substate: resolved
+vote_count: 66
+asset_identifier: Ext. B Scope
+asset_type: OTHER
+max_severity: critical
+tags:
+- hackerone
+- insecure-direct-object-reference-idor
+---
+
+# Account takeover through password reset in cups.mail.ru
+
+## Metadata
+
+- HackerOne Report ID: 843160
+- Weakness: Insecure Direct Object Reference (IDOR)
+- Program: mailru
+- Disclosed At: 2020-08-03T09:53:57.506Z
+- Has Bounty: Yes
+- Visibility: no-content
+- Substate: resolved
+
+## Original Report
+
+
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

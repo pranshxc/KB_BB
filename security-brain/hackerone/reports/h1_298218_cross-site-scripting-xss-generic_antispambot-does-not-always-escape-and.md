@@ -1,0 +1,87 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '298218'
+original_report_id: '298218'
+title: antispambot does not always escape <, >, &, " and '
+weakness: Cross-site Scripting (XSS) - Generic
+team_handle: wordpress
+created_at: '2017-12-15T08:49:22.937Z'
+disclosed_at: '2019-09-16T17:45:51.322Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 3
+asset_identifier: WordPress Core
+asset_type: SOURCE_CODE
+max_severity: critical
+tags:
+- hackerone
+- cross-site-scripting-xss-generic
+---
+
+# antispambot does not always escape <, >, &, " and '
+
+## Metadata
+
+- HackerOne Report ID: 298218
+- Weakness: Cross-site Scripting (XSS) - Generic
+- Program: wordpress
+- Disclosed At: 2019-09-16T17:45:51.322Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+The `antispambot` function escapes some randomly selected characters from its first argument, for example:
+
+```
+<?php
+echo antispambot( 'example@example.com' );
+```
+
+This would print out:
+
+```
+exa&#109;p&#108;&#101;&#64;&#101;xa&#109;pl&#101;&#46;&#99;o&#109;
+```
+
+Since this returns HTML, developers are not going to use `esc_html` with the return value of `antispambot`, since that would double-escape the result. Developers will assume that this function can be safely used with untrusted email addresses, which is a fair assumption. However, it turns out that `antispambot` cannot be trusted. Whether a character is escaped is randomly selected, even if the character is `<`, `>`, `&`, `"`, or `'`. These last five characters should always be escaped.
+
+There is a chance that this will print out unescaped:
+
+```
+<?php
+echo antispambot( '<script>console.log("hello");</script>');
+```
+
+Even though the chance of this happening is low, with enough repetitions this could happen eventually.
+
+`antispambot` should always escape the five sensitive characters.
+
+## Impact
+
+If `antispambot` is being used by a plugin that passes to it untrusted input, an attacker could cause arbitrary client-side code to run. Since the probability of all of the characters remaining unescaped is low, only a small fraction of the attacks would succeed, and the attacker would need the ability to attack many times to see a few successes.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

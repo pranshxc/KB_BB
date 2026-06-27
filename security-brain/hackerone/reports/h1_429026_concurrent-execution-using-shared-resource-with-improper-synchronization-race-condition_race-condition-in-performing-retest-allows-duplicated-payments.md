@@ -1,0 +1,80 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '429026'
+original_report_id: '429026'
+title: Race condition in performing retest allows duplicated payments
+weakness: Concurrent Execution using Shared Resource with Improper Synchronization
+  ('Race Condition')
+team_handle: security
+created_at: '2018-10-26T01:04:15.852Z'
+disclosed_at: '2018-12-27T12:12:56.622Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 211
+asset_identifier: hackerone.com
+asset_type: URL
+max_severity: critical
+tags:
+- hackerone
+- concurrent-execution-using-shared-resource-with-improper-synchronization-race-condition
+---
+
+# Race condition in performing retest allows duplicated payments
+
+## Metadata
+
+- HackerOne Report ID: 429026
+- Weakness: Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')
+- Program: security
+- Disclosed At: 2018-12-27T12:12:56.622Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+## Summary
+
+There exists a race condition in performing retests. By executing multiple requests to confirm a retest at the same time, a malicious user is paid multiple times for the retest. This allows for stealing money from HackerOne, which could go unnoticed by both HackerOne and the attacker (me).
+
+## Steps to Reproduce
+
+1. Receive a retest request email from HackerOne.
+2. Intercept the request to retest the email. Right click the request in Burp Suite and select `Copy as curl command`.
+3. Execute the request on the command line in the form `(request) & (request) & ...`. In testing, I executed the command 5 times.
+4. Scroll to the bottom of https://hackerone.com/settings/bounties. The payment will appear under the `Retest payments` sections and may be repeated.
+5. Wait a few weeks. If successful, a callback from HackerOne will be received (in this case from @michiel):
+
+    {F366191}
+
+6. Check your bank account statements. Observe that a $500 payment was sent from HackerOne 2 weeks ago, demonstrating that the race condition was successful:
+
+{F366192}
+
+## Impact
+
+This allows an attacker to exploit the retesting feature to steal many times more money. Given that this went unnoticed by both the attacker and HackerOne for over 2 weeks, this has the potential to be exploited multiple times to steal money from HackerOne.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

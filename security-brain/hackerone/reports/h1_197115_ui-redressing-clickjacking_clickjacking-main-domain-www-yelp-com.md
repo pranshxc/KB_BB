@@ -1,0 +1,74 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '197115'
+original_report_id: '197115'
+title: Clickjacking @ Main Domain[www.yelp.com]
+weakness: UI Redressing (Clickjacking)
+team_handle: yelp
+created_at: '2017-01-10T05:27:45.082Z'
+disclosed_at: '2017-11-09T20:07:07.317Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 0
+tags:
+- hackerone
+- ui-redressing-clickjacking
+---
+
+# Clickjacking @ Main Domain[www.yelp.com]
+
+## Metadata
+
+- HackerOne Report ID: 197115
+- Weakness: UI Redressing (Clickjacking)
+- Program: yelp
+- Disclosed At: 2017-11-09T20:07:07.317Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+Hello Yelp Security Team, 
+
+I Just want to submit a report Clickjacking on your Main Domain,
+I Know that this is a Low Risk But may i know if your aware of it. 
+
+PoC:
+See Atachments.
+
+Impact:
+
+For example, imagine an attacker who builds a web site that has a button on it that says "click here for a free iPod". However, on top of that web page, the attacker has loaded an iframe with your mail account, and lined up exactly the "delete all messages" button directly on top of the "free iPod" button. The victim tries to click on the "free iPod" button but instead actually clicked on the invisible "delete all messages" button. In essence, the attacker has "hijacked" the user's click, hence the name "Clickjacking".
+
+One of the most notorious examples of Clickjacking was an attack against the Adobe Flash plugin settings page. By loading this page into an invisible iframe, an attacker could trick a user into altering the security settings of Flash, giving permission for any Flash animation to utilize the computer's microphone and camera.
+
+Clickjacking also made the news in the form of a Twitter worm. This clickjacking attack convinced users to click on a button which caused them to re-tweet the location of the malicious page, and propagated massively.
+
+There have also been clickjacking attacks abusing Facebook's "Like" functionality. Attackers can trick logged-in Facebook users to arbitrarily like fan pages, links, groups, etc.
+
+Request: if you think the reported issues have acceptable risk and you are not going to make changes then kindly request to mark as Informative or let me close it.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

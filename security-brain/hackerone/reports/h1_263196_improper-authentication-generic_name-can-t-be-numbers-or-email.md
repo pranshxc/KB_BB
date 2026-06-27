@@ -1,0 +1,76 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '263196'
+original_report_id: '263196'
+title: Name can't be numbers or email
+weakness: Improper Authentication - Generic
+team_handle: legalrobot
+created_at: '2017-08-25T11:09:41.728Z'
+disclosed_at: '2017-08-25T17:27:07.361Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 0
+asset_identifier: www.legalrobot.com
+asset_type: URL
+max_severity: medium
+tags:
+- hackerone
+- improper-authentication-generic
+---
+
+# Name can't be numbers or email
+
+## Metadata
+
+- HackerOne Report ID: 263196
+- Weakness: Improper Authentication - Generic
+- Program: legalrobot
+- Disclosed At: 2017-08-25T17:27:07.361Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+Hi Team, 
+I observe a strange behaviour in your registration form. When we are making account and entering the first and last name. According to security concerns you should force user to write their first and last names which actually looks like name for example your should force users that the first and last name should be alphabets like "Husnain Iqbal" It cant be a number or email. 
+I noticed that in other websites show error if you written a number or email in first name or last name. 
+so the thing is you also should error when a user enter a number or email in first name and last name for security reasons.
+
+Reproduce steps: 
+1. Go to registration Form 
+2. Fill first name with 101001010 or hi101@gmail.com and last name like 101011991 or hi102@gmail.com 
+3. Then fill the other fields of the registration form . 
+4. Then click register and the account will successfully made. 
+
+Poc: 
+
+For Proof of concept i am attaching some screen shots. you can look at it.
+
+Recommendation: 
+
+Account Name Cant be numbers or email for security purposes. If a user enters an email in his name by which he/she is getting registered so it is easy for hacker to compromise the account.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

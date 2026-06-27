@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "security-brain": {
+      "type": "stdio",
+      "command": "/ABSOLUTE/PATH/TO/KB_BB/knowledge-rag/.venv/bin/python",
+      "args": ["-m", "mcp_server.server"],
+      "env": {
+        "DYLD_LIBRARY_PATH": "/opt/homebrew/opt/expat/lib"
+      }
+    }
+  }
+}

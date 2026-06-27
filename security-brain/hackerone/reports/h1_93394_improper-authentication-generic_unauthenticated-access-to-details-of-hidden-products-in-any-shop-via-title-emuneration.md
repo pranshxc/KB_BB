@@ -1,0 +1,71 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '93394'
+original_report_id: '93394'
+title: Unauthenticated access to details of hidden products in any shop via title
+  emuneration
+weakness: Improper Authentication - Generic
+team_handle: shopify
+created_at: '2015-10-12T03:49:19.322Z'
+disclosed_at: '2015-10-23T20:08:47.691Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 2
+tags:
+- hackerone
+- improper-authentication-generic
+---
+
+# Unauthenticated access to details of hidden products in any shop via title emuneration
+
+## Metadata
+
+- HackerOne Report ID: 93394
+- Weakness: Improper Authentication - Generic
+- Program: shopify
+- Disclosed At: 2015-10-23T20:08:47.691Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+This issue allows external unauthenticated attacker to bypass password protection of currently unopened ("Opening Soon" stage) stores and obtain full description of products considering they know/enumerate the title of the product and the product has been published. It could be used to obtain commercially sensitive information, such as retail prices of new products, and be used by competitor stores.
+
+Reproduction:
+1. Browse to the following URL and see that the shop is password-protected http://sdfg674567.myshopify.com/
+2. Browse to http://sdfg674567.myshopify.com/tee.json?channel=buy_button
+and see the description of an item with title 'tee' which otherwise should not be accessible:
+
+{"product":{"id":3019937283,"title":"tee","body_html":"\u003cp\u003eThis is a hidden super secret Tee at an awesome price that will be published next year.\u003c\/p\u003e\n\u003cp\u003eYou should not be able to see it via:\u003c\/p\u003e\n\u003cp\u003ehttp:\/\/sdfg674567.myshopify.com\/products\/tee\u003c\/p\u003e","vendor":"sdfg674567","product_type":"","created_at":"2015-10-08T18:48:58-04:00","handle":"tee","updated_at":"2015-10-11T23:45:36-04:00","published_at":"2015-10-11T23:44:00-04:00","template_suffix":null,"published_scope":"global","tags":"","variants":[{"id":8803442371,"product_id":3019937283,"title":"Default Title","price":"11.00","sku":"","position":1,"grams":0,"inventory_policy":"deny","compare_at_price":null,"fulfillment_service":"manual","inventory_management":null,"option1":"Default Title","option2":null,"option3":null,"created_at":"2015-10-08T18:48:58-04:00","updated_at":"2015-10-08T23:30:52-04:00","requires_shipping":true,"taxable":true,"barcode":"","inventory_quantity":-124,"old_inventory_quantity":-124,"image_id":null,"weight":0.0,"weight_unit":"kg"}],"options":[{"id":3641130243,"product_id":3019937283,"name":"Title","position":1,"values":["Default Title"]}],"images":[],"image":null}}
+
+3. Note that access to https://dslfkgjskldjfgsd.myshopify.com/products/tee.json or https://dslfkgjskldjfgsd.myshopify.com/products/tee/ is closed.
+
+This type of request with the "channel=buy_button" parameter in the URL is made when a Buy Button widget is added to the shop and an admin browses products to create a button for.
+
+Recommendation:
+Ensure that proper authentication and authorization checks are performed for the affected request.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

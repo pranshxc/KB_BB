@@ -1,0 +1,68 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '116360'
+original_report_id: '116360'
+title: The POODLE attack (SSLv3 supported) for https://grtp.co/
+weakness: Cryptographic Issues - Generic
+team_handle: gratipay
+created_at: '2016-02-14T10:46:50.227Z'
+disclosed_at: '2016-03-16T16:55:45.086Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 3
+tags:
+- hackerone
+- cryptographic-issues-generic
+---
+
+# The POODLE attack (SSLv3 supported) for https://grtp.co/
+
+## Metadata
+
+- HackerOne Report ID: 116360
+- Weakness: Cryptographic Issues - Generic
+- Program: gratipay
+- Disclosed At: 2016-03-16T16:55:45.086Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Websites that support SSLv3 and CBC-mode ciphers are potentially vulnerable to an active MITM (Man-in-the-middle) attack. This attack, called POODLE, is similar to the BEAST attack and also allows a network attacker to extract the plaintext of targeted parts of an SSL connection, usually cookie data. Unlike the BEAST attack, it doesn't require such extensive control of the format of the plaintext and thus is more practical. 
+
+The impact of this vulnerability
+An attacker may be able to exploit this problem to conduct man-in-the-middle attacks and decrypt communications between the affected service and clients. 
+
+How to fix this vulnerability
+It's recommended to disable SSLv3 and replace it with TLSv1.0 as soon as compatibility with legacy clients is no longer required. (The only browser that does not support TLSv1.0 is Internet Explorer 6). 
+
+To disable SSLv2 and SSLv3: 
+For Nginx:
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2; 
+
+Screenshots attached for the reference.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

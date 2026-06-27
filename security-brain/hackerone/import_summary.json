@@ -1,0 +1,22 @@
+{
+  "datasets_attempted": [
+    "elamaran619/hackerone_disclosed_reports",
+    "Hacker0x01/hackerone_disclosed_reports"
+  ],
+  "datasets_loaded": [
+    "elamaran619/hackerone_disclosed_reports",
+    "Hacker0x01/hackerone_disclosed_reports"
+  ],
+  "datasets_failed": [],
+  "splits_processed": [
+    "train",
+    "validation",
+    "test"
+  ],
+  "total_rows_seen": 25236,
+  "total_unique_written": 12492,
+  "duplicates_skipped": 12744,
+  "total_errors": 0,
+  "output_directory": "/Users/pranshupathak/KB_BB/security-brain/hackerone/reports",
+  "timestamp": "2026-06-26T11:52:37.153455"
+}

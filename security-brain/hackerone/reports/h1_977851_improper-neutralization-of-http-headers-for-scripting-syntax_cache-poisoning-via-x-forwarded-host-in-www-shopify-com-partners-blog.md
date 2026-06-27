@@ -1,0 +1,79 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '977851'
+original_report_id: '977851'
+title: Cache poisoning via X-Forwarded-Host in www.shopify.com/partners/blog
+weakness: Improper Neutralization of HTTP Headers for Scripting Syntax
+team_handle: shopify
+created_at: '2020-09-09T20:28:19.669Z'
+disclosed_at: '2020-09-11T17:03:05.108Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 62
+asset_identifier: '*.shopify.com'
+asset_type: WILDCARD
+max_severity: medium
+tags:
+- hackerone
+- improper-neutralization-of-http-headers-for-scripting-syntax
+---
+
+# Cache poisoning via X-Forwarded-Host in www.shopify.com/partners/blog
+
+## Metadata
+
+- HackerOne Report ID: 977851
+- Weakness: Improper Neutralization of HTTP Headers for Scripting Syntax
+- Program: shopify
+- Disclosed At: 2020-09-11T17:03:05.108Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Hello, run in loop requests with```  X-Forwarded-Host: your_hackerz_site.com ``` - after some time You will notice in response ``` your_hackerz_site.com ```
+
+{F981839}
+
+now remove ``` X-Forwarded-Host  ``` - there still be our url:
+
+{F981841}
+
+i've logged to my VPS to verify this bug and downloaded poisoned page (https://www.shopify.com/partners/blog/7-web-design-and-development-awards-you-should-enter) , it's contains links to collabolator:
+
+{F981844}
+
+{F981845}
+
+Looks like there is no URL keys so i stopped testing cause i'm breaking site functionally, but it was be worth to check if we can poison  ```  X-Forwarded-Host : foobar.pl"><img src=x onerror=blah> ``` or try use other headers, if i get permission i can try other vectors on a older article to prevent distributing users.
+
+## Impact
+
+poisoning links, eg. FB share button:
+
+``` https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fa4129912adehq5m14ryflu01ovx68j0ur0ho6.burpcollaborator.net%2Fpartners%2Fblog%2F7-web-design-and-development-awards-you-should-enter ```
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

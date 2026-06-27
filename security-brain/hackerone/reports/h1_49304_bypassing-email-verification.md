@@ -1,0 +1,67 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '49304'
+original_report_id: '49304'
+title: Bypassing Email verification
+team_handle: vimeo
+created_at: '2015-02-26T18:37:48.174Z'
+disclosed_at: '2015-03-29T18:28:20.918Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 1
+tags:
+- hackerone
+---
+
+# Bypassing Email verification
+
+## Metadata
+
+- HackerOne Report ID: 49304
+- Weakness: 
+- Program: vimeo
+- Disclosed At: 2015-03-29T18:28:20.918Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+Hi
+
+Description : 
+
+While registering new account on vimeo the email must be verified -> A confirmation link sent to the email the user want to register ( Without verifying user cant do some actions ).There is a Bypass for it 
+
+Steps For Doing PoC : 
+1.If attacker have already account ( with verified email ) I have register one with maddy@live.com.pk
+2.The attacker add the email xyz@email.com 
+3.A message appear Image ( PoC_1.png ) 
+4.Here come's the main part ( The confirmation link is sent the primary email of the attacker not to the one the attacker was going to add ) ( Poc_2.png and Poc_3.png ) 
+5.A confirmation mail sent to the maddy@live.com.pk ( Poc_2.png ) ( Poc_3.png ) 
+6.Attacker clicked on Verify Email address 
+7.The result ( PoC_4.png )
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

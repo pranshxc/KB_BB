@@ -1,0 +1,71 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '263733'
+original_report_id: '263733'
+title: Email Spoofing - SPF record set to Neutral
+weakness: Violation of Secure Design Principles
+team_handle: gsa_bbp
+created_at: '2017-08-27T07:02:02.240Z'
+disclosed_at: '2017-09-06T21:59:21.437Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 2
+asset_identifier: federalist.18f.gov
+asset_type: URL
+max_severity: high
+tags:
+- hackerone
+- violation-of-secure-design-principles
+---
+
+# Email Spoofing - SPF record set to Neutral
+
+## Metadata
+
+- HackerOne Report ID: 263733
+- Weakness: Violation of Secure Design Principles
+- Program: gsa_bbp
+- Disclosed At: 2017-09-06T21:59:21.437Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+Hi, 
+
+Introduction:
+There is a email spoofing vulnerability.Email spoofing is the forgery of an email header so that the message appears to have originated from someone or somewhere other than the actual source. Email spoofing is a tactic used in phishing and spam campaigns because people are more likely to open an email when they think it has been sent by a legitimate source. The goal of email spoofing is to get recipients to open, and possibly even respond to, a solicitation.
+
+Steps to Reproduce:
+1. goto http://www.kitterman.com/spf/validate.html
+2. Enter domain name: 18f.com and click spf record if any under "Does my domain already have an SPF record? What is it? Is it valid?"
+3. The SPF record  is observed as below
+"Found v=spf1 record for 18f.gov: 
+v=spf1 include:spf.mandrillapp.com ?all"
+
+which is set to neutral,Neutral-The SPF record specifies explicitly that nothing can be said about validity.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

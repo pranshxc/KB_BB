@@ -1,0 +1,81 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '122791'
+original_report_id: '122791'
+title: Active Email Hyperlink Sent on riders.uber.com
+weakness: Violation of Secure Design Principles
+team_handle: uber
+created_at: '2016-03-13T11:08:47.517Z'
+disclosed_at: '2016-06-13T21:55:40.940Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 2
+tags:
+- hackerone
+- violation-of-secure-design-principles
+---
+
+# Active Email Hyperlink Sent on riders.uber.com
+
+## Metadata
+
+- HackerOne Report ID: 122791
+- Weakness: Violation of Secure Design Principles
+- Program: uber
+- Disclosed At: 2016-06-13T21:55:40.940Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+On `riders.uber.com` when the rider changes their information an email will be sent to their email informing them a change has been made on their rider account.
+
+The rider can change their first name to anything within 45 characters and once the change has been made they can add an email to their account. But once they add the email, a confirmation email will be sent but will contain the riders first name. If the rider changed their first name to `Rider. Visit www.yahoo.com for more info.` the URL posted will have an active hyperlink.
+
+`Hi Rider. Visit www.yahoo.com for more info.,
+
+Please visit this link to confirm your email address:
+
+https://riders.uber.com/confirm-email?email_token=
+
+Love,
+Team Uber`
+
+PoC:
+This issue does reply on some type of `social engineering`
+
+The attacker can purchase a short domain and put a message within 45 characters as their first name.
+Once they have done that they can start adding and/or replacing emails a bunch of times to send mass emails and these emails will be coming from `support@uber.com`
+
+Once the person receiving the emails clicks on the link, they will be redirected to some malicious website.
+
+Video: https://www.dropbox.com/s/84e7oftmcdmb4sw/emailhyperlink.mov?dl=0
+
+Possible Fix:
+Do not allow links to be set as the riders names.
+Do not allow special characters (. , / \ etc.)
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

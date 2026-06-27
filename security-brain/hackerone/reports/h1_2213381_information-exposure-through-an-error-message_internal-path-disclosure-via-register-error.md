@@ -1,0 +1,93 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '2213381'
+original_report_id: '2213381'
+title: internal path disclosure via register error
+weakness: Information Exposure Through an Error Message
+team_handle: tennessee-valley-authority
+created_at: '2023-10-17T17:20:43.396Z'
+disclosed_at: '2023-11-30T15:45:36.618Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 33
+asset_identifier: '*.tva.gov'
+asset_type: WILDCARD
+max_severity: critical
+tags:
+- hackerone
+- information-exposure-through-an-error-message
+---
+
+# internal path disclosure via register error
+
+## Metadata
+
+- HackerOne Report ID: 2213381
+- Weakness: Information Exposure Through an Error Message
+- Program: tennessee-valley-authority
+- Disclosed At: 2023-11-30T15:45:36.618Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+## Summary:
+Hi team,
+when we call too many register query, we get  error, in this error we can see internal path and sql query structure
+
+## Steps To Reproduce:
+1. go to register form https://valleyconnect.tva.gov/registration 
+2. complete form and click on submit registration, then intercept request with burp
+3. use intruder for call multiple request, we should replace email in every request.
+
+```
+POST /registration HTTP/2
+Host: valleyconnect.tva.gov
+
+UserName=admin&Password=jgn%25%5EThgf%23rfvHRESdy56tef&ConfirmPassword=jgn%25%5EThgf%23rfvHRESdy56tef&EmailAddress=Z%40jetamooz.com&EmailAddressVerify=Z%40jetamooz.com&FirstName=alex&LastName=jane&Initials=&Suffix=&JobTitle=it&OrganizationType=Business+Partner&OrganizationName=sarv&Country=792&StreetAddress=sary&City=katy&Province=titi&State=AL&ZipCode=&PhoneNumber=%28934%29+734-4364&MobilePhoneNumber=%28957%29+363-4655&TimeZone=America%2FLos_Angeles&CapAnswer=U4YIQ&CapKey=XXTxVOUWZrCz6buVtsgF2cFaPHLSCKVSRQc4z4My13Bee8JiTYVZXmiPd8zLSbMc&BeCheck=
+```
+
+response :
+```
+ Failed to request registration. Please try again or contact support. Error: Telerik.OpenAccess.Exceptions.OptimisticVerificationException: Row not found: GenericOID@b5128f1e RegistrationRequest base_id=1f499ef7-83fa-4a77-8fd9-693b52c4db9b
+UPDATE [sf_dynamic_content] SET [last_modified] = @p0, [voa_version] = @p1 WHERE [base_id] = @p2 AND [voa_version] = @p3
+Batch Entry 0 (set event logging to all to see parameter data)
+   at Telerik.Sitefinity.Data.TransactionManager.CommitTransaction(String transactionName)
+   at DataAccessLayer.Classes.RegistrationRequestService.AddRegistrationRequest(RegistrationRequestEntry model) in D:\Agent\_work\1825\s\Code\DataAccessLayer\Classes\RegistrationRequestService.cs:line 193
+```
+
+## Tips:
+we should insert fast and continuous for geting error
+
+## Supporting Material/References:
+{F2781135}
+{F2781143}
+
+## Impact
+
+Impact
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

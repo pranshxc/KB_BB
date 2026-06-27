@@ -1,0 +1,100 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '294201'
+original_report_id: '294201'
+title: subdomain takeover at news-static.semrush.com
+weakness: Improper Access Control - Generic
+team_handle: semrush
+created_at: '2017-12-01T10:04:40.130Z'
+disclosed_at: '2018-01-10T13:08:29.070Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 34
+tags:
+- hackerone
+- improper-access-control-generic
+---
+
+# subdomain takeover at news-static.semrush.com
+
+## Metadata
+
+- HackerOne Report ID: 294201
+- Weakness: Improper Access Control - Generic
+- Program: semrush
+- Disclosed At: 2018-01-10T13:08:29.070Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+**Summary:** The subdomain news-static.semrush.com can be taken over by attackers and abuse it for further attacks (Phishing, XSS Cross origin, malware, etc..).
+
+**Description:** The subdomain news-static.semrush.com was pointed using CNAME to Amazon S3, but no bucket with that name was registered. This meant that anyone could sign up for Amazon S3, claim the bucket as their own and then serve content on news-static.semrush.com
+
+**Browsers Verified In:**
+  * Google Chrome v62.0.3202.94 
+  * FireFox ESR v52.5.0
+
+**Steps To Reproduce:** 
+  1. Open AWS account
+  2. Create s3 bucket and claim the subdomain news-static.semrush.com
+  3. upload poc.html file to the bucket
+
+**Supporting Material/References:**
+
+```
+$ dig A news-static.semrush.com @8.8.8.8
+
+; <<>> DiG 9.8.3-P1 <<>> A news-static.semrush.com @8.8.8.8
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 35678
+;; flags: qr rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;news-static.semrush.com.	IN	A
+
+;; ANSWER SECTION:
+news-static.semrush.com. 59	IN	CNAME	s3.amazonaws.com.
+s3.amazonaws.com.	3459	IN	CNAME	s3-1.amazonaws.com.
+s3-1.amazonaws.com.	4	IN	A	52.216.21.165
+```
+
+**POC**
+http://news-static.semrush.com/POC_2313521212.html
+
+This means that nobody else can claim the bucket and add content.
+
+**Mitigation/Fix** 
+I have claimed the bucket on my account so no one can claimed it before I release it.
+Remove the news-static.semrush.com DNS entry. Alternatively, if you wish to use news-static.semrush.com with S3, tell me in a comment and I will remove the bucket from my Amazon account.
+
+## Impact
+
+The attacker will own the subdomain and can do whatever he want with it, such as Phishing, XSS that can affect all *.semrush.com to bypass cross origin policy and upload malwares. etc..
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

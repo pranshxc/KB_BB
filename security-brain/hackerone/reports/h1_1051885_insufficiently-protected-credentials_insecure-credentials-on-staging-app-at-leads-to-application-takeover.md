@@ -1,0 +1,103 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '1051885'
+original_report_id: '1051885'
+title: Insecure ███████ credentials on staging app at ████ leads to application takeover
+weakness: Insufficiently Protected Credentials
+team_handle: deptofdefense
+created_at: '2020-12-07T03:22:46.240Z'
+disclosed_at: '2021-02-10T21:03:16.766Z'
+has_bounty: false
+visibility: full
+substate: resolved
+vote_count: 4
+tags:
+- hackerone
+- insufficiently-protected-credentials
+---
+
+# Insecure ███████ credentials on staging app at ████ leads to application takeover
+
+## Metadata
+
+- HackerOne Report ID: 1051885
+- Weakness: Insufficiently Protected Credentials
+- Program: deptofdefense
+- Disclosed At: 2021-02-10T21:03:16.766Z
+- Has Bounty: No
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+**Summary:**
+A ██████████ application called "████" has an old endpoint that accepts insecure/test ████████ credentials despite being a publicly-accessible IP. This endpoint also provides the ability to view information that may be FOUO, to exfiltrate information on registered personnel or contractors, to upload files, and to change configuration settings with ███████████████ privileges.
+
+**Description:**
+The IP address ███ points to a deployment of an application called ████/█████, which is a DoD-owned system on █████████). The login for this deployment accepts insecure ███ credentials (███).
+
+There is also an authentication/█████ panel accessible at https://██████████externally accessible with these credentials.
+
+The ████████ system available through this login includes file upload features, data exfiltration and management, workspace management, and infrastructure management.
+
+The ██████████ / authentication █████████istration system available through this login includes file import/export privileges, user management, RBAC management, HTTP header management, OAuth credential management, session management, and frankly anything else you can think of that would be in an ████████ panel.
+
+████████ frontend:
+#███████
+#██████
+#█████
+
+███████ backend:
+#███
+#█████████
+#█████
+#██████
+#██████
+
+## Step-by-step Reproduction Instructions
+1. Navigate to https://████
+2. Enter the username "██████" and the password "██████████"
+3. After logging in, click "Launch" under ██████
+4. Navigate to https://███████████
+5. Enter the username "███" and the password "█████████"
+
+## Product, Version, and Configuration (If applicable)
+████████████
+███
+Build Date: 25 November 2020
+
+## Suggested Mitigation/Remediation Actions
+1. Immediately disable insecure ███████████████ credentials.
+2. I would recommend preventing external access to the ████████ █████████ portal/requiring CAC as a best practice.
+
+## Impact
+
+An unauthorized attacker can exfiltrate intelligence and personnel information stored in a staging █████/█████.
+An unauthorized attacker can modify, insert, and delete intelligence and personnel information stored in a staging ████████/███████.
+
+An unauthorized attacker can exfiltrate, modify, upload to, download from, and/or deny access to a staging ██████ environment through the ██████ ████ panel. 
+
+I did not feel comfortable seeing whether I could escalate file uploads to an RCE before getting DOD consent.
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

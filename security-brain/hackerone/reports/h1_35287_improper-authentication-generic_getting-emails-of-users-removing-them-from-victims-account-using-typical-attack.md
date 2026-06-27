@@ -1,0 +1,99 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '35287'
+original_report_id: '35287'
+title: getting emails of users/removing them from victims account [using typical attack]
+weakness: Improper Authentication - Generic
+team_handle: x
+created_at: '2014-11-12T13:04:55.177Z'
+disclosed_at: '2015-03-13T04:17:05.335Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 3
+tags:
+- hackerone
+- improper-authentication-generic
+---
+
+# getting emails of users/removing them from victims account [using typical attack]
+
+## Metadata
+
+- HackerOne Report ID: 35287
+- Weakness: Improper Authentication - Generic
+- Program: x
+- Disclosed At: 2015-03-13T04:17:05.335Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+Hey Hi, 
+
+I would like to explain a typical type of attack combined with a brute force attack leading to email disclosure. 
+conditions : should be having email notifications ON .
+
+Every time someone follows me , favs my tweet i get a notification on my email, and the footer of the email . click here if this email is not signed up.
+
+https://twitter.com/account/not_my_account/[account_name]/D26H5-DAH4C-141579
+
+Every notification email has a different unique Code.
+But the probability of getting the right is very LOW.
+But when we send 1000 email notifications to the victim(by fav and un-fav continuously on a particular tweet )  
+the probability decreases a bit, and when the email notifications are increased the probability of getting the right code gets HIGH!
+
+chances of getting the right code ∝ number of notification emails.
+
+This whole process can be simply automated using PHP or python, making it more easy.
+
+Faults in the system:
+
+1) a unique code is generated every time, 5 secs 5 notification emails = 5 different codes.
+      Fix suggested: The code generated should be the same for like next 1 hour
+
+2)  The code doesn't expire.  i dig'd into one of my old twitter notification emails and seen that the code is still active.
+        Fix suggested : Expire tokens ASAP!
+
+3)  Getting the right discloses the email. whenever i get the right code, the email is disclosed.
+              For example: for username @test entering the right code discloses
+              "If you did not sign up for the Twitter account "test", please confirm so that we may remove your                  email address test@gmail.com from this account. "
+      Fix suggested : use *** instead
+something like te****@gmail.com
+
+4) if a user removes an email , the code should immediately  get expired .
+    if we hit the right code it still discloses the old email.
+something like this:
+"Your email has been removed.
+Your email (test@live.com) has been removed from the Twitter account "test".
+
+You will no longer receive Twitter notifications intended for this account."
+
+
+Thanks,
+Karthik
+wesecureapp
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

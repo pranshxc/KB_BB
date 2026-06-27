@@ -1,0 +1,94 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '1882751'
+original_report_id: '1882751'
+title: Reflected XSS in ██████████
+weakness: Cross-site Scripting (XSS) - Reflected
+team_handle: deptofdefense
+created_at: '2023-02-22T12:11:01.897Z'
+disclosed_at: '2023-03-24T17:26:52.240Z'
+has_bounty: false
+visibility: full
+substate: resolved
+vote_count: 5
+tags:
+- hackerone
+- cross-site-scripting-xss-reflected
+---
+
+# Reflected XSS in ██████████
+
+## Metadata
+
+- HackerOne Report ID: 1882751
+- Weakness: Cross-site Scripting (XSS) - Reflected
+- Program: deptofdefense
+- Disclosed At: 2023-03-24T17:26:52.240Z
+- Has Bounty: No
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+**Description:**
+XSS vulnerability found on one of `██████████` subdomains. [ DoD scope]
+
+After analyzing `https://████████████/` (███████) I found  `path/user/NextRequestAccount.action` page that have `militarybranch` parameter in `GET` request.  `militarybranch` parameter vulnerable to XSS vulnerability.
+
+
+`https://█████████████/` requires a valid user to access the contents, but the registration page is accessible to all visitors without any restrictions or credentials.
+████
+
+User should select `Military Branch` in registration page and there is reflection point! 
+Modifying `militarybranch` parameter in request and set payload on it, you'll receive `XSS Success!` alert box.
+
+Payload:
+`https://████████████/path/user/NextRequestAccount.action?militarybranch=███%3CHTMl%0Aonmouseover%0A=%0Aalert(%27XSSSuccess!%27)%0Dx//&firstName=0xd3adc0de&middleName=0xd3adc0de&lastName=0xd3adc0de&email=0xd3adc0de&title=0xd3adc0de&department=&organization=&ship=0xd3adc0de&orgid=&location=`
+█████
+
+## References
+https://owasp.org/www-community/attacks/xss/
+
+## Impact
+
+By exploiting this vulnerability an attacker can trick the users to execute XSS and steal user's cookies.
+Launch advanced phishing attacks.
+Execute browser-based attacks etc.
+
+## System Host(s)
+████████████████
+
+## Affected Product(s) and Version(s)
+
+
+## CVE Numbers
+
+
+## Steps to Reproduce
+* Visit the following URL 
+`https://████████████/path/user/NextRequestAccount.action?militarybranch=████%3CHTMl%0Aonmouseover%0A=%0Aalert(%27XSSSuccess!%27)%0Dx//&firstName=0xd3adc0de&middleName=0xd3adc0de&lastName=0xd3adc0de&email=0xd3adc0de&title=0xd3adc0de&department=&organization=&ship=0xd3adc0de&orgid=&location=` you will receive `XSS Success!` alert box.
+
+## Suggested Mitigation/Remediation Actions
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

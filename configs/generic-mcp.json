@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "security-brain": {
+      "command": "/ABSOLUTE/PATH/TO/KB_BB/knowledge-rag/.venv/bin/python",
+      "args": ["-m", "mcp_server.server"]
+    }
+  }
+}

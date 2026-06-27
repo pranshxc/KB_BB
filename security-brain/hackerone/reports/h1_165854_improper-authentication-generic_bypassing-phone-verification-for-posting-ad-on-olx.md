@@ -1,0 +1,74 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '165854'
+original_report_id: '165854'
+title: Bypassing Phone Verification For Posting AD On OLX
+weakness: Improper Authentication - Generic
+team_handle: olx
+created_at: '2016-09-05T11:51:47.828Z'
+disclosed_at: '2016-10-11T09:20:13.749Z'
+has_bounty: false
+visibility: full
+substate: informative
+vote_count: 4
+tags:
+- hackerone
+- improper-authentication-generic
+---
+
+# Bypassing Phone Verification For Posting AD On OLX
+
+## Metadata
+
+- HackerOne Report ID: 165854
+- Weakness: Improper Authentication - Generic
+- Program: olx
+- Disclosed At: 2016-10-11T09:20:13.749Z
+- Has Bounty: No
+- Visibility: full
+- Substate: informative
+
+## Original Report
+
+Overview
+In computer networks, rate limiting is used to control the rate of traffic sent or received by a network interface controller. It can be induced by the network protocol stack of the sender due to a received ECN-marked packet and also by the network scheduler of any router along the way.
+Proof Of Concept:Steps To Reproduce
+1.Click On Submit The Add Button.
+2.Add Details According to Your Wish.
+3.Add Victim Phone Number In Phone Number Section.
+4.It Will Ask For The Verification Code.
+5.Intercept The Request and Send it to Intruder.
+6.Load Simple List Of 10,000 Words.
+7.Start The Attack and You Can easily get the new code.(Image Attached)
+Risk:You Can Post An Ad By Any phone number,Hence the person can be annoyed,Decreasing the reputation of Olx.
+When the correct code is found The Response Becomes 301 and length 579.
+Hence ,The hacker can detect the code easily by filtering the responses.
+FIX: There should be rate limiting on the OTP parameter for the AD Section.
+I was able to successfully  post the add,See the image for proof.
+
+
+Thanks And Regards
+Abhishek
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

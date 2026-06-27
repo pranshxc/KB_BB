@@ -1,0 +1,34 @@
+{"query": "password reset token still valid after email change", "expected_category": "Authentication Bypass"}
+{"query": "IDOR in organization membership role change", "expected_category": "Access Control"}
+{"query": "OAuth redirect_uri callback validation account takeover", "expected_category": "Authentication Bypass"}
+{"query": "SSRF cloud metadata bypass", "expected_category": "Server-Side Request Forgery"}
+{"query": "GraphQL authorization bypass", "expected_category": "Access Control"}
+{"query": "file upload content type bypass", "expected_category": "File Upload"}
+{"query": "CORS misconfiguration credentials leak", "expected_category": "Misconfiguration"}
+{"query": "JWT algorithm confusion", "expected_category": "Authentication Bypass"}
+{"query": "SAML signature validation bypass", "expected_category": "Authentication Bypass"}
+{"query": "session not invalidated after password change", "expected_category": "Authentication Bypass"}
+{"query": "MFA reset bypass", "expected_category": "Authentication Bypass"}
+{"query": "clickjacking login page", "expected_category": "Clickjacking"}
+{"query": "information disclosure through debug endpoint", "expected_category": "Information Disclosure"}
+{"query": "race condition coupon abuse", "expected_category": "Business Logic"}
+{"query": "cache poisoning host header", "expected_category": "Web Cache Poisoning"}
+{"query": "path traversal file download", "expected_category": "Path Traversal"}
+{"query": "business logic bug account takeover", "expected_category": "Business Logic"}
+{"query": "open redirect OAuth chaining", "expected_category": "Open Redirect"}
+{"query": "tenant isolation broken access control", "expected_category": "Access Control"}
+{"query": "password reset poisoning host header", "expected_category": "Authentication Bypass"}
+{"query": "email verification bypass", "expected_category": "Authentication Bypass"}
+{"query": "insecure direct object reference invoice download", "expected_category": "Access Control"}
+{"query": "authorization bypass via role downgrade", "expected_category": "Access Control"}
+{"query": "API mass assignment vulnerability", "expected_category": "Mass Assignment"}
+{"query": "CSRF account email change", "expected_category": "CSRF"}
+{"query": "webhook signature validation bypass", "expected_category": "Business Logic"}
+{"query": "subdomain takeover", "expected_category": "Subdomain Takeover"}
+{"query": "insecure file processing", "expected_category": "File Upload"}
+{"query": "request smuggling", "expected_category": "Request Smuggling"}
+{"query": "rate limit bypass", "expected_category": "Business Logic"}
+{"query": "XSS stored in user profile bio field", "expected_category": "Cross-Site Scripting"}
+{"query": "SQL injection in search endpoint", "expected_category": "SQL Injection"}
+{"query": "command injection in file processing pipeline", "expected_category": "Command Injection"}
+{"query": "graphql introspection enabled in production", "expected_category": "Information Disclosure"}

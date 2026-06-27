@@ -1,0 +1,87 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '15574'
+original_report_id: '15574'
+title: Reporting Bugs
+team_handle: fanfootage
+created_at: '2014-06-08T01:23:34.231Z'
+disclosed_at: '2016-06-16T14:28:31.891Z'
+has_bounty: false
+visibility: full
+substate: resolved
+vote_count: 2
+tags:
+- hackerone
+---
+
+# Reporting Bugs
+
+## Metadata
+
+- HackerOne Report ID: 15574
+- Weakness: 
+- Program: fanfootage
+- Disclosed At: 2016-06-16T14:28:31.891Z
+- Has Bounty: No
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+1)This page allows visitors to upload files to the server. Various web applications allow users to upload files (such as pictures, images, sounds, ...). Uploaded files may pose a significant risk if not handled correctly. A remote attacker could send a multipart/form-data POST request with a specially-crafted filename or mime type and execute arbitrary code.
+Affected items
+/artists 
+If the uploaded files are not safely checked an attacker may upload malicious files.
+Restrict file types accepted for upload: check the file extension and only allow certain files to be uploaded. Use a whitelist approach instead of a blacklist. Check for double extensions such as .php.png. Check for files without a filename like .htaccess (on ASP.NET, check for configuration files like web.config). Change the permissions on the upload folder so the files within it are not executable. If possible, rename the files that are uploaded.
+
+2)When a new name and password is entered in a form and the form is submitted, the browser asks if the password should be saved. Thereafter when the form is displayed, the name and password are filled in automatically or are completed as the name is entered. An attacker with local access could obtain the cleartext password from the browser cache.
+Affected items
+/login 
+/register 
+Possible sensitive information disclosure
+The password auto-complete should be disabled in sensitive applications. 
+To disable auto-complete, you may use a code similar to: 
+<INPUT TYPE="password" AUTOCOMPLETE="off">
+
+3)Vulnerability:	 Clickjacking
+Vulnerable Domain:	fanfootage.com
+Vulnerable URL:	https://fanfootage.com/
+Browser version:	Google Chrome 35.0.1916.114
+Operating system:	Windows
+Steps to Reproduce;
+<html>
+	<style>
+		iframe { 
+		width: 800px; 
+		height: 500px; 
+		position: absolute; 
+		top: 0; left: 0; 
+		filter: alpha(opacity=50); 
+		opacity: 0.5; 
+		}  
+	</style>
+	<iframe src="https://fanfootage.com/">
+</html>
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

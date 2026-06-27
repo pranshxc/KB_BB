@@ -1,0 +1,112 @@
+---
+source: hackerone
+dataset: elamaran619/hackerone_disclosed_reports
+h1_id: '716761'
+original_report_id: '716761'
+title: WAF bypass via double encoded non standard ASCII chars permitted a reflected
+  XSS on response page not found pages - (629745 bypass)
+weakness: Cross-site Scripting (XSS) - Reflected
+team_handle: starbucks
+created_at: '2019-10-17T22:16:54.926Z'
+disclosed_at: '2020-01-29T17:33:19.699Z'
+has_bounty: true
+visibility: full
+substate: resolved
+vote_count: 56
+asset_identifier: www.starbucks.co.uk
+asset_type: URL
+max_severity: critical
+tags:
+- hackerone
+- cross-site-scripting-xss-reflected
+---
+
+# WAF bypass via double encoded non standard ASCII chars permitted a reflected XSS on response page not found pages - (629745 bypass)
+
+## Metadata
+
+- HackerOne Report ID: 716761
+- Weakness: Cross-site Scripting (XSS) - Reflected
+- Program: starbucks
+- Disclosed At: 2020-01-29T17:33:19.699Z
+- Has Bounty: Yes
+- Visibility: full
+- Substate: resolved
+
+## Original Report
+
+**Summary:** Report [629745](https://hackerone.com/reports/629745) not properly resolved: "Many Starbucks websites are vulnerable to cross-site scripting on 404 pages because double quotes lack sanitizing in hidden input tags, which leads to JavaScript execution".
+
+**Description:**
+Report 629745 caught my attention, so I began testing the WAF to see if I could find any other issues. After a while I found out that the previously reported issue was not properly resolved as I was able to bypass the double encoding filter.
+
+The original payload on the report was something like this:
+```
+https://www.starbucks.com.br/testing%2522%2520accesskey='x'%2520onclick='confirm%601%60'
+```
+and it got resolved. But you can bypass the filter with this:
+```
+https://www.starbucks.com.br/testing%2522%80%2520accesskey='x'%2520onclick='confirm%601%60'
+```
+Notice the `%80` between `%2522` and `%2520`. In fact, you can replace the `%80` with any hex value __beyond `%7f`__  and the payload still works (there's a couple of exceptions throwing "Bad Request" errors:  `%81`, `%8d`, `%8f`, `%90`, and `%9d`), but values in the range `%00-%7f` get properly filtered out (throwing custom "Server Error" pages and 404 pages, 301 and 302 redirect pages, and default 400 Bad Request errors, depending on the value)
+
+So, this payload works:
+```
+https://www.starbucks.com.br/testing%2522%FF%2520accesskey='x'%2520onclick='confirm%601%60'
+```
+but this one doesn't:
+```
+https://www.starbucks.com.br/testing%2522%7F%2520accesskey='x'%2520onclick='confirm%601%60'
+```
+
+There is a similar behaviour if you put the double-hex digit first.
+This payload breaks the filter:
+```
+https://www.starbucks.com.br/testing%80%2522%2520accesskey='x'%2520onclick='confirm%601%60'
+```
+but this one doesn't:
+```
+https://www.starbucks.com.br/testing%7F%2522%2520accesskey='x'%2520onclick='confirm%601%60'
+```
+
+**Platform(s) Affected:** Firefox 69.0.3
+
+## Steps To Reproduce:
+
+  1. Visit this link on Firefox: 
+
+```
+https://www.starbucks.com.br/testing%2522%80%2520accesskey='x'%2520onclick='confirm%601%60'
+```
+
+  2. Press CONTROL+ALT+X on Mac, or ALT+SHIFT+X on Windows
+
+## Recommendations for fix
+The range of hex values `%80-%FF` is breaking the WAF filter, those values need to be filtered out just like the range `%00-%7F` is being filtered out.
+
+## Impact
+
+As the original report said:
+"JavaScript is against Starbucks users on multiple critical domains. JavaScript execution results in information theft and an attacker can perform unwanted actions on a victim's behalf".
+
+## Extracted Security Notes
+
+### Likely Vulnerability Class
+
+*Leave this section for future enrichment.*
+
+### Likely Root Cause
+
+*Leave this section for future enrichment.*
+
+### Potential Impact
+
+*Leave this section for future enrichment.*
+
+### Defensive Test Cases
+
+*Leave this section for future enrichment.*
+
+### Remediation Ideas
+
+*Leave this section for future enrichment.*
