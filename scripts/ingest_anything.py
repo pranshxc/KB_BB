@@ -404,8 +404,9 @@ def extract_archive(filepath: Path, temp_dir: Path) -> List[Path]:
                 for name in zf.namelist():
                     # Safety: skip symlinks, absolute paths, path traversal
                     info = zf.getinfo(name)
-                    if info.is_symlink():
+                    if hasattr(info, "is_symlink") and info.is_symlink():
                         continue
+
                     if os.path.isabs(name) or ".." in Path(name).parts:
                         log.warning(f"  Skipping unsafe path in archive: {name}")
                         continue
@@ -634,7 +635,7 @@ def process_file(
     # Skip sensitive files unless allowed
     if not args.allow_sensitive and is_sensitive(filepath):
         append_error(manifest_dir, str(filepath), "Sensitive file skipped (use --allow-sensitive to force)")
-        return 0, 0, 1
+        return 0, -1, 0  # -1 = skipped sensitive
 
     # Read raw bytes for fingerprinting
     try:
@@ -648,7 +649,7 @@ def process_file(
         suffix = ".tar.gz"
     source_type = resolve_source_type(suffix)
     if source_type == "unknown":
-        return 0, 0, 0
+        return 0, 0, -1  # -1 = unknown type
 
     # Extract text based on source type
     raw_text: Optional[str] = None
@@ -798,6 +799,8 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         "scanned": 0,
         "ingested": 0,
         "skipped_dupes": 0,
+        "skipped_sensitive": 0,
+        "skipped_unknown": 0,
         "errors": 0,
         "by_category": {},
         "by_type": {},
@@ -821,7 +824,9 @@ def run_pipeline(args: argparse.Namespace) -> dict:
             continue
 
         if args.dry_run:
-            suffix = filepath.suffix.lower()
+            suffix = "".join(filepath.suffixes).lower() if filepath.suffixes else filepath.suffix.lower()
+            if suffix.endswith(".tar.gz"):
+                suffix = ".tar.gz"
             stype = resolve_source_type(suffix)
             is_sens = is_sensitive(filepath) and not args.allow_sensitive
             if is_sens:
@@ -839,9 +844,14 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         ingested, skipped, errored = process_file(
             filepath, output_dir, manifest_dir, fingerprints, args
         )
-        stats["ingested"] += ingested
-        stats["skipped_dupes"] += skipped
-        stats["errors"] += errored
+        if skipped == -1:
+            stats["skipped_sensitive"] += 1
+        elif errored == -1:
+            stats["skipped_unknown"] += 1
+        else:
+            stats["ingested"] += ingested
+            stats["skipped_dupes"] += skipped
+            stats["errors"] += errored
 
         if ingested:
             suffix = filepath.suffix.lower()
@@ -917,6 +927,8 @@ def main():
     else:
         print(f"  Files ingested:       {ig}")
         print(f"  Duplicates skipped:   {du}")
+        print(f"  Sensitive skipped:    {stats.get('skipped_sensitive', 0)}")
+        print(f"  Unknown types:        {stats.get('skipped_unknown', 0)}")
         print(f"  Errors:               {er}")
         if stats.get("by_type"):
             print(f"  By type:              {json.dumps(stats['by_type'])}")
