@@ -1,0 +1,91 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2023-04-17_how-to-narrow-recon-giving-me-bounty.md
+original_filename: 2023-04-17_how-to-narrow-recon-giving-me-bounty.md
+title: How to narrow recon giving me $$$$ Bounty
+category: documents
+detected_topics:
+- api-security
+- command-injection
+- otp
+- graphql
+- csrf
+tags:
+- imported
+- documents
+- api-security
+- command-injection
+- otp
+- graphql
+- csrf
+language: en
+raw_sha256: 9f214e0aa978665fe482646a3360e40bc180b13bdf9372ab95f8a5e110f31a3f
+text_sha256: 162f575b302bf778964f814d7f71efd7606fe368b955c13fbc5d3c7cfe69a955
+ingested_at: '2026-06-28T07:32:20Z'
+sensitivity: unknown
+redactions_applied: false
+---
+
+# How to narrow recon giving me $$$$ Bounty
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2023-04-17_how-to-narrow-recon-giving-me-bounty.md
+- Source Type: markdown
+- Detected Topics: api-security, command-injection, otp, graphql, csrf
+- Ingested At: 2026-06-28T07:32:20Z
+- Redactions Applied: False
+- Raw SHA256: `9f214e0aa978665fe482646a3360e40bc180b13bdf9372ab95f8a5e110f31a3f`
+- Text SHA256: `162f575b302bf778964f814d7f71efd7606fe368b955c13fbc5d3c7cfe69a955`
+
+
+## Content
+
+---
+title: "How to narrow recon giving me $$$$ Bounty"
+url: "https://mmdz.ninja/2023/04/17/how-narrow-recon-giving-me-bounty/"
+final_url: "https://mmdz.ninja/2023/04/17/how-narrow-recon-giving-me-bounty/"
+authors: ["Mohammad Zaheri (@mzaherii)"]
+bugs: ["Web cache deception"]
+publication_date: "2023-04-17"
+added_date: "2024-02-06"
+source: "pentester.land/writeups.json"
+original_index: 1258
+---
+
+# How to narrow recon giving me $$$$ Bounty
+
+17 Apr 2023 • Mohammad Zaheri • [Writeups] [Web]
+
+## Introduction
+
+In this writeup, I explain how to get 4 digit bounty with web applications recon and I hope this article will be helpful for you.
+
+## Program Scope and technologies
+
+In the past month in invited to a private program in HackerOne, i usually work on a program with limited scope, and this program just has a sandbox domain: (sandbox.target.tld) and they started the bounty program in Q1 of 2022, I pick up the domain and open my BurpSuite
+
+## Recon
+
+I signed up using my alias email. after quickly browsing the web application i saw my BurpSuite history, all requests are GraphQL POST method request. I understood finding Bugs in this program is hard but i never give up.
+
+![POST requests](/imgs/inline/fupost.png)
+
+### Patience and discipline is a key
+
+after clicking every item on the site and working with it, i understand how the application works. The interesting part was that the application send a GET request to `GET /api/auth/csrf` endpoint for getting new csrf token every 60 minutes. this endpoint vulnerable to [Web Cache Deception Attack](https://omergil.blogspot.com/2017/02/web-cache-deception-attack.html), but in not really impactful
+
+![WCDA on CSRF endpoint](/imgs/inline/csrfe.png)
+
+I decided to find an endpoint that would return sensitive information and started fuzzing the `GET /api/auth/FUZZ` endpoint after some time i found interesting endpoint which returns sensitive information and vulnerable to Web Cache Deception Attack
+
+with this endpoint i can access the all user information and api keys
+
+![:D](/imgs/inline/donecd.png)
+
+I reported that to the program and they triaged it as critical
+
+![:D](/imgs/inline/cdc.png)
+
+Thanks for reading if you have any questions please reach me out

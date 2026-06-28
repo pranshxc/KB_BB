@@ -1,0 +1,149 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2016-07-22_twitters-vine-source-code-dump-10080.md
+original_filename: 2016-07-22_twitters-vine-source-code-dump-10080.md
+title: Twitter's Vine Source code dump - $10080
+category: documents
+detected_topics:
+- api-security
+- information-disclosure
+- xss
+- command-injection
+- supply-chain
+tags:
+- imported
+- documents
+- api-security
+- information-disclosure
+- xss
+- command-injection
+- supply-chain
+language: en
+raw_sha256: 38a48832e120d406b8878f1ae13b6c46a1da6150b83bbe376fc779dd6cb012f1
+text_sha256: 21165a410f37bd5608c2be417f368ae0acd637052f91cdd7c96275695d62b145
+ingested_at: '2026-06-28T07:31:55Z'
+sensitivity: unknown
+redactions_applied: false
+---
+
+# Twitter's Vine Source code dump - $10080
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2016-07-22_twitters-vine-source-code-dump-10080.md
+- Source Type: markdown
+- Detected Topics: api-security, information-disclosure, xss, command-injection, supply-chain
+- Ingested At: 2026-06-28T07:31:55Z
+- Redactions Applied: False
+- Raw SHA256: `38a48832e120d406b8878f1ae13b6c46a1da6150b83bbe376fc779dd6cb012f1`
+- Text SHA256: `21165a410f37bd5608c2be417f368ae0acd637052f91cdd7c96275695d62b145`
+
+
+## Content
+
+---
+title: "Twitter's Vine Source code dump - $10080"
+page_title: "$10000 Security Bug - Twitter's Vine Source code dumped — 6 Seconds are not enough »  Whiskey Tango Foxtrot"
+url: "https://avicoder.me/2016/07/22/Twitter-Vine-Source-code-dump/"
+final_url: "https://avicoder.me/2016/07/22/Twitter-Vine-Source-code-dump/"
+authors: ["avicoder (@avicoder)"]
+programs: ["Twitter"]
+bugs: ["Source code disclosure", "Information disclosure"]
+bounty: "10,080"
+publication_date: "2016-07-22"
+added_date: "2022-09-15"
+source: "pentester.land/writeups.json"
+original_index: 6278
+---
+
+[Whiskey Tango Foxtrot](/)
+
+[ _Github_ ](https://github.com/avicoder) [ _Twitter_ ](https://twitter.com/avicoder) [ _RSS_ ](https://avicoder.me/feed) [ _Book Shelf_ ](/bookshelf.html) 
+  
+
+# 
+
+$10000 Security Bug - Twitter's Vine Source code dumped
+
+6 Seconds are not enough
+
+Note: **The following post provides details only about the process I followed to procure the source code of Vine. I have not and will not disclose the source code because it’s AGAINST THE LAW!!!**
+
+Hello Hackers!
+
+Today I am going to disclose a long awaited bug, which I found in _Twitter’s Vine_.
+
+I started participating in various VRPs in 2015 and have been very active since then. Especially in the Twitter Bug bounty program since their response is quick and they release bounty as soon as the bug is **triaged**.
+
+As Vine is within the scope of Twitter VRP, I started looking at the various points of entry I could access.
+
+Discovering subdomains is an important part of reconnaissance, which of late, are mostly automated with various tools.
+
+But I prefer:
+
+  * Subbrute
+  * Virustotal.com
+  * Dnsdumster.com
+  * Dnsdb.org
+  * Censys.io
+  * CSP headers
+
+Censys.io gave me an interesting URL https://docker.vineapp.com in its result.
+
+![Censys](https://i.imgur.com/TqYfrj7.png)
+
+When I tried to access it via the browser, it shows /* private docker registry */ in the response.
+
+![docker.vineapp.com](https://i.imgur.com/tzqQULl.png)
+
+If it is supposed to be private, then why is it publicly accessible? There has to be some thing else to going on here. On googling /* private docker registry */ I get to know that the docker provides a functionality which allows a developer to host and share images through the web.
+
+I’ve worked on docker earlier and the experience helped me realize that there could be some chances of finding code in these images. The chances that developers frequently use it to share data, as they do not have to go through the process of setting up the environment again on their local machines, was quite high. However, since I wasn’t too familiar with docker APIs, I faced some trouble while accessing images endpoints. The ones I could access, unfortunately, were not giving any useful results.
+
+After figuring out that this docker registry is not using the latest version(V2) and the endpoints are different from previous ones, I needed to use V1 documentation to access them. Only after that was I able to get some useful response from the server.
+
+I started by querying search API endpoint which reveals that around 80+ images are hosted.That was the good sign.
+
+![search](https://i.imgur.com/QS9FUDs.png)
+
+Next thing was to install docker client on my Ubuntu VM and download those images. The search results show a lot of images, however, I decided to download vinewww just because it looks like public_html. This may contain the Vine source.
+  
+  
+  sudo docker pull https://docker.vineapp.com:443/library/vinewww
+  
+
+![docker-images](https://i.imgur.com/AcoA7y7.png)
+
+After the download was complete, I ran docker image vinewww with an interactive shell and got inside the running docker image.
+
+`ls` in vinewww shows MVC(flask) is used.
+
+![docket-it](https://i.imgur.com/TykNTsl.png)
+
+I was able to see the entire source code of vine, its API keys and third party keys and secrets. Even running the image without any parameter, was letting me host a replica of VINE locally.
+
+![showtime](https://i.imgur.com/qqAsoI2.png)
+
+Until next time, keep hacking! ;)
+
+You can find more insightful comments @[Reddit/netsec](https://www.reddit.com/r/netsec/comments/4u3m8s/twitters_vine_source_code_disclosure_bug/), @[Hackernews](https://news.ycombinator.com/item?id=12147831) and [@slashdot](https://news.slashdot.org/story/16/07/25/2249239/vines-source-code-was-accidentally-made-public-for-five-minutes)
+
+PS : Special thanks to @thanmayee & @kaushal
+
+# Timeline
+
+  * March 21,2016 - Bug Reported through Hackerone
+  * March 22,2016 - Need more info
+  * March 31,2016 - Full exploitation shown
+  * March 31,2016 - Bug fixed (within 5 min)
+  * April 2,2016 - $10080 Bounty awarded
+
+* * *
+
+Written by **avicoder** on **22 July 2016**  
+[Follow @avicoder](https://twitter.com/avicoder)
+
+[ _Media_ ](/media.html) [ _Mail_ ](/cdn-cgi/l/email-protection#69081f000a060d0c1b32081d34061c1d05060602320d061d340a0604) [ _Notes_ ](https://github.com/avicoder/notes) [ _Bookmarks_ ](http://hack.plus) [ _Certifications_ ](/certs.html) 
+
+[@avicoder](https://github.com/avicoder)

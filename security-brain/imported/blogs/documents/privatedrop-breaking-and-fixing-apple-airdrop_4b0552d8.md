@@ -1,0 +1,118 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2021-04-21_privatedrop-breaking-and-fixing-apple-airdrop.md
+original_filename: 2021-04-21_privatedrop-breaking-and-fixing-apple-airdrop.md
+title: 'PrivateDrop: Breaking and Fixing Apple AirDrop'
+category: documents
+detected_topics:
+- command-injection
+- rate-limit
+- information-disclosure
+- mobile-security
+tags:
+- imported
+- documents
+- command-injection
+- rate-limit
+- information-disclosure
+- mobile-security
+language: en
+raw_sha256: 4b0552d8e9fe7dbf57721445e879eb2db5e0cd0e9dcd84f41b6db34ba75ee8ac
+text_sha256: 94521d9400453640f4d43a267cf71a393bf114c0b1b46183a6eb7fd3c7b3bc13
+ingested_at: '2026-06-28T07:32:05Z'
+sensitivity: unknown
+redactions_applied: false
+---
+
+# PrivateDrop: Breaking and Fixing Apple AirDrop
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2021-04-21_privatedrop-breaking-and-fixing-apple-airdrop.md
+- Source Type: markdown
+- Detected Topics: command-injection, rate-limit, information-disclosure, mobile-security
+- Ingested At: 2026-06-28T07:32:05Z
+- Redactions Applied: False
+- Raw SHA256: `4b0552d8e9fe7dbf57721445e879eb2db5e0cd0e9dcd84f41b6db34ba75ee8ac`
+- Text SHA256: `94521d9400453640f4d43a267cf71a393bf114c0b1b46183a6eb7fd3c7b3bc13`
+
+
+## Content
+
+---
+title: "PrivateDrop: Breaking and Fixing Apple AirDrop"
+page_title: "Breaking and Fixing Apple AirDrop | PrivateDrop"
+url: "https://privatedrop.github.io"
+final_url: "https://privatedrop.github.io/"
+authors: ["Alexander Heinrich", "Matthias Hollick", "Thomas Schneider", "Milan Stute", "Christian Weinert"]
+programs: ["Apple"]
+bugs: ["Privacy issue", "Information disclosure"]
+publication_date: "2021-04-21"
+added_date: "2022-09-15"
+source: "pentester.land/writeups.json"
+original_index: 3716
+---
+
+This website is also available [**in German**](/de/).
+
+## News
+
+### 01/2024: Chinese Forensic Institute Exploits AirDrop Vulnerabilities to Identify Senders of “Inappropriate Information”
+
+A [forensic institute in Beijing](https://sfj.beijing.gov.cn/sfj/sfdt/ywdt82/flfw93/436331732/index.html) and international media (e.g., [Bloomberg](https://www.bloomberg.com/news/articles/2024-01-09/china-says-cracked-apple-s-airdrop-to-identify-message-sources), [CNN](https://edition.cnn.com/2024/01/12/tech/china-apple-airdrop-user-encryption-vulnerability-hnk-intl/index.html), and [Ars Technica](https://arstechnica.com/security/2024/01/hackers-can-id-unique-apple-airdrop-users-chinese-authorities-claim-to-do-just-that/)) report that AirDrop vulnerabilities are actively exploited in China to identify senders of “inappropriate information”. Fundamentally, these attacks exploit Apple’s insecure use of hash functions for “obfuscating” contact identifiers in the AirDrop protocol execution - a major privacy risk that we reported to Apple already in 2019. In more detail, the Chinese forensic experts extract hash values of the senders’ contact identifiers that are retained in log files on the receiver devices. Then, they apply hash reversal attacks based on rainbow tables (as proposed in our proof of concept) to efficiently obtain the contact identifiers in the clear.
+
+### 04/2021: AirDrop Vulnerabilities in the News
+
+See [**https://owlink.org/press**](https://owlink.org/press) and [**https://encrypto.de/news/privatedrop**](https://encrypto.de/news/privatedrop) for press reviews.
+
+## AirDrop Primer
+
+Apple AirDrop is a file-sharing service that allows users to send photos and other media over a direct Wi-Fi connection from one Apple device to another. As people typically want to share sensitive data exclusively with people they know, AirDrop only shows receiver devices from address book contacts by default. To determine whether the other party is a contact, AirDrop uses a mutual authentication mechanism that compares a user’s phone number and email address with entries in the other user’s address book.
+
+## The Problem: Phone Number and Email Address Leakage
+
+We discovered _two_ severe privacy leaks in this authentication mechanism. In particular, we showed that it is possible to learn the phone numbers and email addresses of AirDrop users – even as a complete stranger. An attacker just requires a Wi-Fi-capable device and physical proximity to a target.
+
+The discovered problems are rooted in Apple’s use of hash functions for “obfuscating” the exchanged contact identifiers, i.e., phone numbers and email addresses, during the discovery process. It is well-known in industry and academia that [hashing fails to provide privacy-preserving contact discovery](https://contact-discovery.github.io) since hash values of phone numbers can be quickly reversed using simple techniques such as brute-force attacks or database look-ups.
+
+### Vulnerability #1: Sender Leakage
+
+During the AirDrop authentication handshake, the sender always discloses their own (hashed) contact identifiers as part of an initial _discover_ message. A malicious receiver can therefore learn all (hashed) contact identifiers of the sender without requiring any prior knowledge of their target. To obtain these identifiers, an attacker simply needs to wait (e.g., at a public hot spot) until a target device scans for AirDrop receivers, i.e., the user opens the sharing pane.
+
+After collecting the (hashed) contact identifiers, the attacker can recover phone numbers and email addresses offline. As shown in [prior work](https://encrypto.de/papers/HWSDS21.pdf), recovering phone numbers is possible in the order of milliseconds. Recovering email addresses is less trivial but possible via dictionary attacks that check common email formats such as first.lastname@{gmail.com,yahoo.com,…}. Alternatively, an attacker could utilize [data breaches](https://www.businessinsider.com/stolen-data-of-533-million-facebook-users-leaked-online-2021-4) or use an [online lookup service for hashed email addresses](https://web.archive.org/web/20191211152224/https://datafinder.com/products/email-recovery).
+
+This attack was also independently discovered and published by the [Apple Bleee](https://hexway.io/research/apple-bleee/) project in July 2019, shortly after our initial responsible disclosure to Apple in May 2019.
+
+### Vulnerability #2: Receiver Leakage
+
+AirDrop receivers present their (hashed) contact identifiers in response to the discover message if they know _any_ of the sender’s contact identifiers (e.g., if the receiver has stored the sender’s email address). A malicious sender can thus learn _all_ contact identifiers (including the receiver’s phone number) without requiring any prior knowledge of the receiver – if the receiver knows the sender.
+
+Importantly, the malicious sender does not have to know the receiver: A popular person within a certain context (e.g., the manager of a company) can exploit this design flaw to learn all (private) contact identifiers of other people who have the popular person in their address book (e.g., employees of the company).
+
+### Vulnerability #3: Log File Leakage
+
+A [forensic institute in Beijing](https://sfj.beijing.gov.cn/sfj/sfdt/ywdt82/flfw93/436331732/index.html) in January 2024 reported that log files on Apple devices retain information related to AirDrop interactions, including the hashed contact identifiers of users who transferred files to the inspected device. We verified that log files containing this information can be obtained using Apple’s [Sysdiagnose](https://it-training.apple.com/tutorials/support/sup075) feature. This only requires the device to be unlocked. Notably, the log files store partial instead of full hash values (40 bit per hash to be precise). Applying hash reversal attacks on such partial hashes can result in finding a few collisions, i.e., multiple phone numbers or email addresses that produce the same partial hash value.
+
+### Proof-of-Concept Attacks
+
+We demonstrate attacks exploiting the first two vulnerabilities with a proof-of-concept implementation that is publicly available on [GitHub](https://github.com/seemoo-lab/opendrop/blob/poc-phonenumber-leak/README.PoC.md). It combines the efforts of [OpenDrop](https://github.com/seemoo-lab/opendrop), an open-source AirDrop implementation, with [RainbowPhones](https://github.com/contact-discovery/rt_phone_numbers), an open-source hash cracking utility that is optimized for non-uniform input domains such as mobile phone numbers.
+
+## Our Solution: PrivateDrop
+
+We developed a solution named _PrivateDrop_ to replace the flawed original AirDrop design. PrivateDrop is based on optimized cryptographic private set intersection protocols that can securely perform the contact discovery process between two users without exchanging vulnerable hash values. Our prototype implementation of PrivateDrop on iOS/macOS shows that our privacy-friendly mutual authentication approach is efficient enough to preserve AirDrop’s exemplary user experience with an authentication delay well below one second.
+
+The implementation of PrivateDrop is publicly available on [GitHub](https://github.com/seemoo-lab/privatedrop).
+
+## Responsible Disclosure
+
+We informed Apple about the privacy issues in May 2019 via responsible disclosure and shared our PrivateDrop solution in October 2020. As of April 20, 2021, Apple has not indicated that they are working on a solution.
+
+This means **Apple users are still vulnerable to the outlined privacy attacks.** They can only protect themselves by disabling AirDrop discovery in the system settings and by refraining from opening the sharing pane.
+
+## Publications
+
+  * [HHSSW21a] **_PrivateDrop: Practical Privacy-Preserving Authentication for Apple AirDrop_** by [Alexander Heinrich](https://www.seemoo.tu-darmstadt.de/team/aheinrich/), [Matthias Hollick](https://www.seemoo.tu-darmstadt.de/team/mhollick/), [Thomas Schneider](https://encrypto.de/schneider), [Milan Stute](https://www.seemoo.tu-darmstadt.de/team/mschmittner/), and [Christian Weinert](https://encrypto.de/weinert) in [30th USENIX Security Symposium (USENIX Security’21)](https://www.usenix.org/conference/usenixsecurity21). Paper available as **[pre-print](https://www.usenix.org/system/files/sec21-heinrich.pdf)**. Implementation available on **[GitHub](https://github.com/seemoo-lab/privatedrop)**.
+  * [HHSSW21b] **_AirCollect: Efficiently Recovering Hashed Phone Numbers Leaked via Apple AirDrop_** by [Alexander Heinrich](https://www.seemoo.tu-darmstadt.de/team/aheinrich/), [Matthias Hollick](https://www.seemoo.tu-darmstadt.de/team/mhollick/), [Thomas Schneider](https://encrypto.de/schneider), [Milan Stute](https://www.seemoo.tu-darmstadt.de/team/mschmittner/), and [Christian Weinert](https://encrypto.de/weinert) in [14th ACM Conference on Security and Privacy in Wireless and Mobile Networks (WiSec’21)](https://sites.nyuad.nyu.edu/wisec21/call-for-posters-and-demos/). Paper available as **[pre-print](https://eprint.iacr.org/2021/893)**. Proof-of-concept attacks available on **[GitHub](https://github.com/seemoo-lab/opendrop/blob/poc-phonenumber-leak/README.PoC.md)**.
+
+This page was generated by [GitHub Pages](https://pages.github.com).

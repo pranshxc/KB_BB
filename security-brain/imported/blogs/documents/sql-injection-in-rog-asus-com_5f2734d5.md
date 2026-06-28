@@ -1,0 +1,121 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2017-11-30_sql-injection-in-rogasuscom.md
+original_filename: 2017-11-30_sql-injection-in-rogasuscom.md
+title: SQL Injection in rog.asus.com
+category: documents
+detected_topics:
+- sqli
+- command-injection
+- automation-abuse
+tags:
+- imported
+- documents
+- sqli
+- command-injection
+- automation-abuse
+language: en
+raw_sha256: 5f2734d5d927edb04ee310211a1d14f6dfaffe4b6c006736d54f0fc956981f33
+text_sha256: 2df5b781ff2131daebdefb4e69f2d0ac53b17000c0ac3aaaaad1e91ab9d449a2
+ingested_at: '2026-06-28T07:31:56Z'
+sensitivity: unknown
+redactions_applied: false
+---
+
+# SQL Injection in rog.asus.com
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2017-11-30_sql-injection-in-rogasuscom.md
+- Source Type: markdown
+- Detected Topics: sqli, command-injection, automation-abuse
+- Ingested At: 2026-06-28T07:31:56Z
+- Redactions Applied: False
+- Raw SHA256: `5f2734d5d927edb04ee310211a1d14f6dfaffe4b6c006736d54f0fc956981f33`
+- Text SHA256: `2df5b781ff2131daebdefb4e69f2d0ac53b17000c0ac3aaaaad1e91ab9d449a2`
+
+
+## Content
+
+---
+title: "SQL Injection in rog.asus.com"
+url: "https://corben.io/blog/17-11-30-asus-sqli"
+final_url: "https://corben.io/blog/17-11-30-asus-sqli"
+authors: ["Corben Leo (@hacker_)"]
+programs: ["Asus"]
+bugs: ["SQL injection", "Security code review"]
+publication_date: "2017-11-30"
+added_date: "2023-05-22"
+source: "pentester.land/writeups.json"
+original_index: 6039
+---
+
+[BACK](/)
+
+# SQL Injection in rog.asus.com
+
+AuthorCORBEN LEO
+
+Published2017.11.30
+
+### 🔎 Introduction & Background
+
+To get started, I'll give a bit of backstory behind this. I found this bug back in **January** of 2017 and was one of the first reports I made to a company. I was bored back in January so I decided to hunt for bugs in *.asus.com. After about an hour I came across rog.asus.com and I noticed that it also had a forum on it. It was running vBulletin 4.2.3. I did a bit of research and found that forumrunner, a core module enabled by default, was vulnerable to SQL Injection in this version.
+
+#### 😕 What is ForumRunner?
+
+> Forum Runner is a vBulletin, XenForo, myBB, and phpBB forum add-on that allows your users to access your forum at blazing fast speeds by using a native application installed on their mobile phone
+
+#### How is it vulnerable?
+
+> vBulletin's code standards use clean_gpc() and clean_array_gpc() functions to sanitize input data, so PHP superglobal arrays are not accessed directly. I would use the word "sanitize" very loosely here, as this vulnerability has just proven that these sanitizing functions are simply not enough.
+
+So it all comes down to `/forumrunner/includes/moderation.php`
+  
+  
+  function do_get_spam_data() {
+  global $vbulletin, $db, $vbphrase;
+  
+  
+  $vbulletin->input->clean_array_gpc('r', array(
+  'threadid' => TYPE_STRING,
+  'postids' => TYPE_STRING,
+  ));
+  
+  ------ snip ------
+  
+  } else if ($vbulletin->GPC['postids'] != ") {
+  $postids = $vbulletin->GPC['postids'];
+  
+  $posts = $db->query_read_slave("
+  SELECT post.postid, post.threadid, post.visible, post.title, post.userid,
+  thread.forumid, thread.title AS thread_title, thread.postuserid, thread.visible AS thread_visible, thread.firstpostid
+  FROM " . TABLE_PREFIX . "post AS post
+  LEFT JOIN " . TABLE_PREFIX . "thread AS thread USING (threadid)
+  WHERE postid IN ($postids)
+  ");
+
+So both `postids` and `threadid` are filtered as a TYPE_STRING, placed into an array (`$vbulletin->GPC`), and then added to the database. TYPE_STRING filtered variables are not protected from SQL Injection.
+
+This is makes the forumrunner module vulnerable to both MySQL boolean-based blind and time-based blind injection.
+
+### 😋 Exploitation
+
+So I checked if ASUS had applied the patch by visiting: `https://rog.asus.com/forum/forumrunner/request.php?d=1&cmd=get_spam_data&postids=1'` and an SQL error was thrown! I threw it into SQLMAP as one does (I suck at manual exploitation of SQL Injection, mainly because I haven't ever gotten past getting some basic info from `UNION ALL SELECT`), however there was a WAF in place so I couldn't extract any data whatsoever. I went to [censys.io](https://censys.io) and searched 'Republic of Gamers' and quickly found the backend IP of the server, in hopes that this would bypass the WAF.
+
+I ran:
+  
+  
+  sqlmap -u "http://103.10.4.162/forum/forumrunner/request.php?d=1&cmd=get_spam_data&postids=1*" --random-agent -threads=10 --level 5 --dbs
+
+and it listed out all of the databases on the site! I had successfully bypassed the WAF. I reported it and they patched it within 2 days. Sadly they didn't have any sort of bounty, but it was still fun!
+
+### References
+
+  * <https://enumerated.wordpress.com/2016/07/11/1/>
+  * <http://blog.securelayer7.net/vbulletin-sql-injection-exploit-cve-2016-6195/>
+
+Thanks for reading,
+
+**Corben Leo**

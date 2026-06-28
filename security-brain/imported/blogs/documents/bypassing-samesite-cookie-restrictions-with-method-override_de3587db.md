@@ -1,0 +1,144 @@
+---
+source: imported
+source_type: markdown
+original_path: knowledge-inbox/blogs-incoming/2023-07-30_bypassing-samesite-cookie-restrictions-with-method-override.md
+original_filename: 2023-07-30_bypassing-samesite-cookie-restrictions-with-method-override.md
+title: Bypassing Samesite Cookie Restrictions with Method Override
+category: documents
+detected_topics:
+- csrf
+- command-injection
+- automation-abuse
+- api-security
+- mobile-security
+- supply-chain
+tags:
+- imported
+- documents
+- csrf
+- command-injection
+- automation-abuse
+- api-security
+- mobile-security
+- supply-chain
+language: en
+raw_sha256: de3587db08d3fdaf045efec113ec2cf51e6500a16c5cb249f3ca55efa7e7ff7c
+text_sha256: 99ee3bc77ef9234fb301497ada0b4f093e93b7538be5ec55a9b38d200fcf8de3
+ingested_at: '2026-06-28T07:32:24Z'
+sensitivity: unknown
+redactions_applied: false
+---
+
+# Bypassing Samesite Cookie Restrictions with Method Override
+
+## Source Metadata
+
+- Original Path: knowledge-inbox/blogs-incoming/2023-07-30_bypassing-samesite-cookie-restrictions-with-method-override.md
+- Source Type: markdown
+- Detected Topics: csrf, command-injection, automation-abuse, api-security, mobile-security, supply-chain
+- Ingested At: 2026-06-28T07:32:24Z
+- Redactions Applied: False
+- Raw SHA256: `de3587db08d3fdaf045efec113ec2cf51e6500a16c5cb249f3ca55efa7e7ff7c`
+- Text SHA256: `99ee3bc77ef9234fb301497ada0b4f093e93b7538be5ec55a9b38d200fcf8de3`
+
+
+## Content
+
+---
+title: "Bypassing Samesite Cookie Restrictions with Method Override"
+url: "https://hazanasec.github.io/2023-07-30-Samesite-bypass-method-override.md/"
+final_url: "https://hazanasec.github.io/2023-07-30-Samesite-bypass-method-override.md/"
+authors: ["Hazana (@HazanaSec)"]
+bugs: ["Samesite cookie bypass", "CSRF"]
+publication_date: "2023-07-30"
+added_date: "2023-08-08"
+source: "pentester.land/writeups.json"
+original_index: 893
+---
+
+# Bypassing Samesite Cookie Restrictions with Method Override
+
+Browsers, in an attempt to mitigate CSRF (Cross-Site Request Forgery) attacks, have introduced the [SameSite cookie attribute](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#samesite-cookie-attribute).
+
+By default, cookies are set to `SameSite=Lax`, which stops the cookie from being sent during cross-site requests, unless they are initiated by top-level navigations via `GET` requests. This effectively protects against CSRF attacks launched through `POST` requests.
+
+However, a loophole exists. A number of web development frameworks support the override of HTTP methods at the server-side. An attacker can exploit this by altering a POST request to a `GET`, thereby bypassing the SameSite cookie restrictions and successfully performing CSRF attacks.
+
+## How Method Override Works
+
+Method Override is a functionality that allows the HTTP method processed by the server to be different from the one specified in the initial request. Here are some typical ways to override methods:
+
+  * Hidden form fields, such as `_method=PUT`
+  * Custom HTTP headers, for instance `X-HTTP-Method-Override: DELETE`
+  * Server-side middleware capable of parsing these overrides
+
+These techniques are frequently used to emulate `PUT`, `PATCH`, and `DELETE` requests in web forms, which by design, only support `GET` and `POST` natively.
+
+## Bypassing Lax Restrictions with GET Requests
+
+In real-world scenarios, servers aren’t always strict about the HTTP method they receive for a given endpoint. This is often the case even for endpoints that traditionally expect a form submission via a `POST` request. If such servers also employ Lax restrictions for their session cookies - either explicitly or due to the default settings of the browser - it opens up a potential avenue for CSRF attacks by triggering a `GET` request from the victim’s browser.
+
+As long as the `GET` request initiates a top-level navigation, the browser will still append the victim’s session cookie. This creates a viable path for launching a CSRF attack. Let’s take a look at one of the simplest methods to execute such an attack:
+  
+  
+  <script>
+  document.location = 'https://example.com/transfer?recipient=attacker&amount=1000';
+  </script>
+  
+
+Even when ordinary GET requests are disallowed, several frameworks provide mechanisms to override the HTTP method stated in the request line. For example, the Symfony framework supports the _method parameter within forms. This parameter takes precedence over the usual method for routing decisions:
+
+## Leveraging Method Override Example
+
+Frameworks like Symfony allow the method to be overridden using `_method` parameters:
+  
+  
+  <form action="https://example.com/transfer" method="POST">
+  <input type="hidden" name="_method" value="GET">
+  <input type="hidden" name="recipient" value="attacker">
+  <input type="hidden" name="amount" value="1000">  
+  </form>
+  
+
+The server is deceived into treating the `POST` request as a `GET` request demonstrating the principle of method override, and how it can be used to manipulate the server-side routing logic. A variety of similar parameters are supported by other frameworks, further extending the potential for such exploits:
+
+## Frameworks With Built-In Support
+
+Here is a summary of some popular web frameworks and how they allow method override:
+
+Framework | Parameter | Method Override Header | Notes  
+---|---|---|---  
+Symfony | `_method` | `X-HTTP-Method-Override` |  
+Rails | `_method` | `X-HTTP-Method-Override` |  
+Laravel | `_method` | `X-HTTP-Method-Override` |  
+CodeIgniter | `_method` | `X-HTTP-Method-Override` |  
+CakePHP | `_method` | `X-HTTP-Method-Override` |  
+Yii | `_method` | `X-HTTP-Method-Override` |  
+Flask | - | `X-HTTP-Method-Override` |  
+Django | - | `X-HTTP-Method-Override` |  
+Angular | - | - | Depends on the HTTP library used  
+React | - | - | Depends on the HTTP library used  
+Vue.js | - | - | Depends on the HTTP library used  
+Ember.js | `_method` | `X-HTTP-Method-Override` |  
+Meteor | `_method` | - |  
+Express.js | `_method` | `X-HTTP-Method-Override` | Via middleware  
+Koa.js | `_method` | `X-HTTP-Method-Override` | Via middleware  
+Next.js | - | - | Depends on the HTTP library used  
+Spring MVC | - | `X-HTTP-Method-Override` |  
+ASP.NET Core | - | `X-HTTP-Method-Override` | With middleware support  
+Phoenix | `_method` | `X-HTTP-Method-Override` |  
+Bottle | `_method` | `X-HTTP-Method-Override` |  
+  
+## Crafting the Exploit
+
+After identifying a potential request on an identified framework, as an attacker it’s trivial to craft this exploit to trigger the malicious `GET` request e.g.
+  
+  
+  <script>  
+  document.location = "https://hazanasec.github.io/send?amount=1000&_method=POST";
+  </script>
+  
+
+When loaded by the unsuspecting victim, this script bypasses the Lax restrictions and performs the intended action on behalf of the victim.
+
+In conclusion, while the SameSite cookie attribute has added a layer of defense against CSRF attacks, it’s essential to be aware of its limitations and potential workarounds. Method override, in certain circumstances, could be exploited by attackers to bypass these protections, happy hacking!
