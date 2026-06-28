@@ -6,6 +6,7 @@ REPO="pranshxc/KB_BB"
 BRANCH="main"
 MCP_NAME="security-brain"
 KR_REPO="https://github.com/lyonzin/knowledge-rag.git"
+INDEX_RELEASE="https://github.com/$REPO/releases/download/v1.0/knowledge-rag-data.tar.gz"
 
 BOLD='\033[1m'; GREEN='\033[92m'; YELLOW='\033[93m'
 CYAN='\033[96m'; RED='\033[91m'; RESET='\033[0m'
@@ -42,9 +43,8 @@ else
   cd "$INSTALL_DIR"
 fi
 
-# If knowledge-rag is empty (not a submodule or clone failed), clone it
 if [[ ! -f "$INSTALL_DIR/knowledge-rag/pyproject.toml" ]]; then
-  info "knowledge-rag not found — cloning..."
+  info "knowledge-rag not found — initializing submodule..."
   git submodule update --init --depth 1 2>/dev/null || \
     git clone --depth 1 "$KR_REPO" "$INSTALL_DIR/knowledge-rag"
 fi
@@ -95,19 +95,25 @@ else
   ok "Using existing reports"
 fi
 
-# ── 6. Index (background) ──────────────────────────────────────────
+# ── 6. Download pre-built index ────────────────────────────────────
 INDEX_DIR="$INSTALL_DIR/knowledge-rag/data"
 if [[ -f "$INDEX_DIR/chroma_db/chroma.sqlite3" ]]; then
   info "Index already exists"
   ok "Using existing index ($(du -sh "$INDEX_DIR" 2>/dev/null | cut -f1))"
 else
-  info "Starting background indexing..."
-  cd "$INSTALL_DIR/knowledge-rag"
-  nohup .venv/bin/python -m mcp_server.server --transport sse \
-    > /tmp/kr-index.log 2>&1 &
-  INDEX_PID=$!
-  info "Indexing started (PID: $INDEX_PID). Log: /tmp/kr-index.log"
-  ok "Indexing in background — search works once chunks are embedded"
+  info "Downloading pre-built knowledge index (390MB)..."
+  mkdir -p "$INDEX_DIR"
+  if curl -fsSL "$INDEX_RELEASE" | tar xzf - -C "$INDEX_DIR/"; then
+    ok "Pre-built index downloaded ($(du -sh "$INDEX_DIR" 2>/dev/null | cut -f1))"
+  else
+    warn "Download failed — building index from scratch (this takes ~30 minutes)..."
+    cd "$INSTALL_DIR/knowledge-rag"
+    nohup .venv/bin/python -m mcp_server.server --transport sse \
+      > /tmp/kr-index.log 2>&1 &
+    INDEX_PID=$!
+    info "Indexing started (PID: $INDEX_PID). Log: /tmp/kr-index.log"
+    ok "Indexing in background — search works once chunks are embedded"
+  fi
 fi
 
 # ── 7. Register MCP client ─────────────────────────────────────────
@@ -160,6 +166,8 @@ echo -e "${BOLD}${GREEN}Security Brain installed!${RESET}"
 echo "================================="
 echo "  Repo:     $INSTALL_DIR"
 echo "  Reports:  12,492 HackerOne"
+echo "  Blogs:    5,253 security blogs"
+echo "  Chunks:   108,561 indexed"
 echo "  MCP name: $MCP_NAME"
 echo "  Client:   $CLIENT"
 echo ""
@@ -167,4 +175,5 @@ echo "  Next: restart your MCP client, then try:"
 echo "    Use the Security Brain to find password reset bugs"
 echo "    search_knowledge('IDOR organization membership')"
 echo "    search_knowledge('SSRF cloud metadata 169.254.169.254')"
+echo "    search_knowledge('GraphQL authorization bypass')"
 echo ""
