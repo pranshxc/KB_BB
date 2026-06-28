@@ -40,7 +40,7 @@ bash scripts/install.sh claude   # or: opencode, generic
 | Security blog writeups | 5,253 | Medium, Portswigger, etc. |
 | Security taxonomies | 12 | Bug classes, root causes, remediation |
 | Curated summaries | 8 | Password reset, IDOR, OAuth, SSRF, GraphQL |
-| Total indexed chunks | 134,199 | ChromaDB vector index |
+| Total indexed chunks | 157,321 | ChromaDB vector index |
 
 ## Project Structure
 
